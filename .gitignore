@@ -1,0 +1,35 @@
+# Roblox
+.roboconf
+**/*.rbxl
+**/*.rbxlx
+**/*.rbxm
+**/*.rbxp
+**/workspace.rbxl
+**/workspace.rbxlx
+**/Model.rbxl
+**/Model.rbxlx
+
+# Rojo
+*.json
+rojo.yaml
+rojo.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Credentials
+.env
+*.env
+credentials.json
+credentials.yaml
