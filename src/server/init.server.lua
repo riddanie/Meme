@@ -44,24 +44,3 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 print("[Server] Initialized (manual service loading)")
-					else
-						warn("[Server] Failed to load service:", service.Name, result)
-					end
-				end
-			end
-		end
-	end
-end
-
--- Auto-start match when first player joins (test mode)
-local matchStarted = false
-Players.PlayerAdded:Connect(function(player)
-	if not matchStarted and ArenaService then
-		task.wait(3) -- Give player time to load
-		matchStarted = true
-		ArenaService:StartMatch()
-		print("[Server] Auto-started match for testing")
-	end
-end)
-
-print("[Server] Initialized (Knit framework pending installation)")
