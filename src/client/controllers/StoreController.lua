@@ -201,7 +201,17 @@ end
 function StoreController:UpdateBalance(dna: number)
 	playerDNA = dna
 	if balanceLabel then
-		balanceLabel.Text = tostring(dna) .. " DNA"
+		balanceLabel.Text = string.format("%d DNA", dna)
+	end
+end
+
+-- Listen for balance updates from server
+function StoreController:KnitInit()
+	-- Receive balance sync from StoreService
+	if RemoteEvents.UpdateBalance then
+		RemoteEvents.UpdateBalance.OnClientEvent:Connect(function(balance: number)
+			self:UpdateBalance(balance)
+		end)
 	end
 end
 
