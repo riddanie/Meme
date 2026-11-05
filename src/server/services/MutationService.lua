@@ -1,44 +1,49 @@
 --!strict
--- Knit Service: Server-authoritative mutation RNG and distribution
--- Implements weighted RNG + pity system (20 spins → guaranteed Legendary/Secret)
+-- MutationService.lua - Server-authoritative mutation RNG
+-- Standalone version (no Knit dependency)
 
-local Knit = require(game.ReplicatedStorage.Packages.Knit)
-local DataService = require(game.ReplicatedStorage.Packages.Knit.Services.DataService)
-local RemoteEvents = require(game.ReplicatedStorage.Shared.RemoteEvents)
-local MutationDatabase = require(game.ReplicatedStorage.Shared.Data.MutationDatabase)
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local MutationService = Knit.CreateService {
-	Name = "MutationService",
-	Client = {
-		MutationApplied = {},
-	},
-	_activeMutations = {}, -- [player] = { mutationId, rarity, duration } (session cache)
-}
+local MutationService = {}
+MutationService.__index = MutationService
 
-function MutationService:KnitStart()
-	RemoteEvents.CreateEvents()
-	print("[MutationService] Started")
+MutationService._activeMutations = {} -- [player] = { mutationId, rarity, duration }
+
+-- Find shared modules
+local function getSharedFolder()
+	local src = ReplicatedStorage:FindFirstChild("src")
+	if src then
+		return src:FindFirstChild("shared")
+	end
+	return nil
 end
 
--- Generate mutation with weighted RNG + pity system
-function MutationService:GenerateMutation(player: Player): { mutationId: string, rarity: string, duration: number }
-	local playerData = DataService:GetPlayerData(player)
-	if not playerData then
-		print("[MutationService] No player data for", player.Name)
-		return { mutationId = "BRAINROT", rarity = "Common", duration = 15 }
+local MutationDatabase = nil
+local sharedFolder = getSharedFolder()
+
+if sharedFolder then
+	local dataFolder = sharedFolder:FindFirstChild("data")
+	if dataFolder then
+		local mutationDb = dataFolder:FindFirstChild("MutationDatabase")
+		if mutationDb then
+			MutationDatabase = require(mutationDb)
+		end
+	end
+end
+
+-- Generate mutation with weighted RNG
+function MutationService:GenerateMutation(player: Player, pityCounter: number)
+	if not MutationDatabase then
+		warn("[MutationService] MutationDatabase not found")
+		return {
+			mutationId = "BRAINROT",
+			rarity = "Common",
+			duration = 15,
+		}
 	end
 
-	-- Pity counter: 20 spins without Legendary/Secret guarantees Legendary
-	local pity = playerData.PityCounter or 0
-	local mutation = MutationDatabase.GetRandomMutation(pity)
-
-	-- Update pity counter
-	pity = pity + 1
-	if mutation.rarity == "Legendary" or mutation.rarity == "Secret" then
-		pity = 0
-	end
-	playerData.PityCounter = pity
-	DataService:SavePlayerData(player, playerData)
+	local mutation = MutationDatabase.GetRandomMutation(pityCounter or 0)
 
 	-- Cache in session
 	self._activeMutations[player] = {
@@ -47,25 +52,7 @@ function MutationService:GenerateMutation(player: Player): { mutationId: string,
 		duration = mutation.duration,
 	}
 
-	-- Broadcast to all clients
-	if RemoteEvents.MutationApplied then
-		RemoteEvents.MutationApplied:FireAllClients({
-			playerId = player.UserId,
-			mutationId = mutation.id,
-			rarity = mutation.rarity,
-			duration = mutation.duration,
-		})
-	end
-
-	-- Broadcast to all clients (with player name for display)
-	if RemoteEvents.MutationBroadcast then
-		RemoteEvents.MutationBroadcast:FireAllClients({
-			playerId = player.UserId,
-			playerName = player.Name,
-			mutation = mutation.id,
-			rarity = mutation.rarity,
-		})
-	end
+	print("[MutationService] Generated mutation for", player.Name, "-", mutation.id, "(", mutation.rarity, ")")
 
 	return {
 		mutationId = mutation.id,
@@ -75,19 +62,15 @@ function MutationService:GenerateMutation(player: Player): { mutationId: string,
 end
 
 -- Get active mutation for player
-function MutationService:GetActiveMutation(player: Player): { mutationId: string, rarity: string, duration: number }?
+function MutationService:GetActiveMutation(player: Player)
 	return self._activeMutations[player]
 end
 
--- Clear mutation on player leave
+-- Clear mutation
 function MutationService:ClearMutation(player: Player)
 	self._activeMutations[player] = nil
 end
 
--- Client request to mutate
-function MutationService:ClientRequestMutation(player: Player)
-	-- Server-authoritative, always allow (could add cooldown logic)
-	return self:GenerateMutation(player)
-end
+print("[MutationService] Module loaded")
 
 return MutationService

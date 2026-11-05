@@ -1,32 +1,22 @@
 --!strict
--- Knit Service: GameAnalytics SDK integration scaffolding
+-- AnalyticsService.lua - GameAnalytics scaffold
+-- Standalone version (no Knit dependency)
 
-local Knit = require(game.ReplicatedStorage.Packages.Knit)
+local AnalyticsService = {}
+AnalyticsService.__index = AnalyticsService
 
-local AnalyticsService = Knit.CreateService {
-	Name = "AnalyticsService",
-	Client = {},
-}
-
-function AnalyticsService:KnitStart()
-	-- TODO: Install GameAnalytics SDK from Roblox marketplace
-	-- https://gameanalytics.com/docs/item/roblox-sdk
-	print("[AnalyticsService] Scaffolding ready - SDK not installed yet")
+function AnalyticsService:TrackEvent(eventName: string, eventData: { [string]: any })
+	print("[AnalyticsService] Event:", eventName, "Data:", eventData)
 end
 
-function AnalyticsService:TrackEvent(category: string, action: string, label: string?, value: number?)
-	-- Stub: Log events until GameAnalytics SDK is integrated
-	print(string.format("[Analytics] %s | %s | %s | %d", category, action, label or "N/A", value or 0))
-	
-	-- TODO: Replace with GameAnalytics:addDesignEvent() when SDK installed
+function AnalyticsService:TrackPlayerJoin(player: any)
+	self:TrackEvent("PlayerJoin", { playerId = player.UserId })
 end
 
-function AnalyticsService:TrackPlayerDeath(player: Player, mutationID: string)
-	self:TrackEvent("Combat", "PlayerDeath", mutationID)
+function AnalyticsService:TrackPlayerLeave(player: any)
+	self:TrackEvent("PlayerLeave", { playerId = player.UserId })
 end
 
-function AnalyticsService:TrackMutationSpin(player: Player, mutationID: string, pityCounter: number)
-	self:TrackEvent("Progression", "MutationSpin", mutationID, pityCounter)
-end
+print("[AnalyticsService] Module loaded")
 
 return AnalyticsService

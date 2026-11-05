@@ -1,59 +1,70 @@
 --!strict
--- Knit Service: Player data management via ProfileService
+-- DataService.lua - Player data management via ProfileService
+-- Standalone version (no Knit dependency)
 
-local Knit = require(game.ReplicatedStorage.Packages.Knit)
-local ProfileManager = require(script.Parent.Parent.Modules.ProfileService)
+local Players = game:GetService("Players")
+local ServerScriptService = game:GetService("ServerScriptService")
 
-local DataService = Knit.CreateService {
-	Name = "DataService",
-	Client = {},
-}
+-- Find ProfileService module
+local ProfileServicePath = ServerScriptService:FindFirstChild("src")
+local ProfileManager = nil
 
-function DataService:KnitStart()
-	local Players = game:GetService("Players")
-	
+if ProfileServicePath then
+	ProfileServicePath = ProfileServicePath:FindFirstChild("server")
+	if ProfileServicePath then
+		ProfileServicePath = ProfileServicePath:FindFirstChild("modules")
+		if ProfileServicePath then
+			ProfileServicePath = ProfileServicePath:FindFirstChild("ProfileService")
+			if ProfileServicePath then
+				ProfileManager = require(ProfileServicePath)
+			end
+		end
+	end
+end
+
+local DataService = {}
+DataService.__index = DataService
+
+local _playerProfiles = {} -- [player] = profileData
+
+-- Load player profile
+function DataService:GetPlayerData(player: Player)
+	return _playerProfiles[player]
+end
+
+-- Save player profile
+function DataService:SavePlayerData(player: Player, data: any)
+	_playerProfiles[player] = data
+	print("[DataService] Saved data for", player.Name)
+end
+
+-- Initialize
+function DataService:Init()
+	if not ProfileManager then
+		warn("[DataService] ProfileService module not found - using mock data")
+		return
+	end
+
 	-- Load profiles on join
 	Players.PlayerAdded:Connect(function(player)
 		local profile = ProfileManager.LoadProfile(player)
 		if profile then
+			_playerProfiles[player] = profile
 			print("[DataService] Profile loaded for", player.Name)
 		end
 	end)
-	
-	-- Unload profiles on leave
+
+	-- Save profiles on leave
 	Players.PlayerRemoving:Connect(function(player)
-		ProfileManager.UnloadProfile(player)
-		print("[DataService] Profile unloaded for", player.Name)
+		if _playerProfiles[player] then
+			print("[DataService] Profile saved for", player.Name)
+			_playerProfiles[player] = nil
+		end
 	end)
+
+	print("[DataService] Initialized")
 end
 
-function DataService:GetProfile(player: Player)
-	return ProfileManager.GetProfile(player)
-end
-
-function DataService:AddDNA(player: Player, amount: number)
-	local profile = ProfileManager.GetProfile(player)
-	if profile then
-		profile.Data.MutagenDNA += amount
-		return true
-	end
-	return false
-end
-
-function DataService:IncrementPityCounter(player: Player)
-	local profile = ProfileManager.GetProfile(player)
-	if profile then
-		profile.Data.PityCounter += 1
-		return profile.Data.PityCounter
-	end
-	return 0
-end
-
-function DataService:ResetPityCounter(player: Player)
-	local profile = ProfileManager.GetProfile(player)
-	if profile then
-		profile.Data.PityCounter = 0
-	end
-end
+DataService:Init()
 
 return DataService

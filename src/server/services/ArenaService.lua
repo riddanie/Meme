@@ -1,69 +1,71 @@
 --!strict
--- Knit Service: Arena timer and match orchestration
+-- ArenaService.lua - Arena timer and match orchestration
+-- Standalone version (no Knit dependency)
 
-local Knit = require(game.ReplicatedStorage.Packages.Knit)
-local GameConfig = require(game.ReplicatedStorage.Shared.Config.GameConfig)
-local RemoteEvents = require(game.ReplicatedStorage.Shared.RemoteEvents)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
-local ArenaService = Knit.CreateService {
-	Name = "ArenaService",
-	Client = {},
-	_matchActive = false,
-	_timeRemaining = 0,
-}
+local ArenaService = {}
+ArenaService.__index = ArenaService
 
-function ArenaService:KnitStart()
-	print("[ArenaService] Started")
+ArenaService._matchActive = false
+ArenaService._timeRemaining = 90
+ArenaService._timerConnection = nil
+
+-- Find shared modules
+local function getSharedFolder()
+	local src = ReplicatedStorage:FindFirstChild("src")
+	if src then
+		return src:FindFirstChild("shared")
+	end
+	return nil
 end
 
-function ArenaService:StartMatch()
-	if self._matchActive then return end
-	
-	self._matchActive = true
-	self._timeRemaining = GameConfig.ARENA_DURATION
-	
-	-- Arena timer loop
-	task.spawn(function()
-		while self._matchActive and self._timeRemaining > 0 do
-			task.wait(1)
-			self._timeRemaining -= 1
-			
-			-- Broadcast timer tick to clients
-			if RemoteEvents.ArenaTimerTick then
-				RemoteEvents.ArenaTimerTick:FireAllClients(self._timeRemaining)
-			end
-			
-			-- Trigger mutation cycle every 15s
-			if self._timeRemaining % GameConfig.MUTATION_INTERVAL == 0 then
-				self:TriggerMutationCycle()
-			end
-		end
-		
-		self:EndMatch()
-	end)
-end
+local GameConfig = nil
 
-function ArenaService:TriggerMutationCycle()
-	local MutationService = Knit.GetService("MutationService")
-	local Players = game:GetService("Players")
-	
-	for _, player in Players:GetPlayers() do
-		if player.Character and player.Character:FindFirstChild("Humanoid") then
-			if player.Character.Humanoid.Health > 0 then
-				MutationService:GenerateMutation(player)
-			end
+local sharedFolder = getSharedFolder()
+if sharedFolder then
+	local config = sharedFolder:FindFirstChild("config")
+	if config then
+		local gameConfigModule = config:FindFirstChild("GameConfig")
+		if gameConfigModule then
+			GameConfig = require(gameConfigModule)
 		end
 	end
 end
 
-function ArenaService:EndMatch()
-	self._matchActive = false
-	print("[ArenaService] Match ended")
-	-- TODO: Calculate rewards and distribute DNA
+function ArenaService:StartMatch()
+	if self._matchActive then
+		print("[ArenaService] Match already active")
+		return
+	end
+
+	self._matchActive = true
+	self._timeRemaining = 90
+
+	print("[ArenaService] Match started - 90 seconds")
+
+	-- Start timer loop
+	self._timerConnection = RunService.Heartbeat:Connect(function(dt)
+		self._timeRemaining = self._timeRemaining - dt
+
+		-- Match end
+		if self._timeRemaining <= 0 then
+			self:EndMatch()
+		end
+	end)
 end
 
-function ArenaService:GetTimeRemaining(): number
-	return self._timeRemaining
+function ArenaService:EndMatch()
+	if self._timerConnection then
+		self._timerConnection:Disconnect()
+		self._timerConnection = nil
+	end
+
+	self._matchActive = false
+	print("[ArenaService] Match ended")
 end
+
+print("[ArenaService] Module loaded")
 
 return ArenaService

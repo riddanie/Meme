@@ -200,7 +200,7 @@ function DeathController:CreateUI()
 	lobbyButton.Font = Enum.Font.GothamBold
 	lobbyButton.Text = "RETURN TO LOBBY"
 	lobbyButton.Parent = deathFrame
-	lobbyButton.MouseButton1Click:Connect(function)
+	lobbyButton.MouseButton1Click:Connect(function()
 		self:ReturnToLobby()
 	end)
 
