@@ -73,9 +73,66 @@ function ArenaService:StartMatch()
 		while self._matchActive do
 			task.wait(15)
 			if self._matchActive then
+				-- Load DataService and MutationService
+				local DataService = nil
+				local MutationService = nil
+				local src = game.ServerScriptService:FindFirstChild("src")
+				if src then
+					local server = src:FindFirstChild("server")
+					if server then
+						local services = server:FindFirstChild("services")
+						if services then
+							local ds = services:FindFirstChild("DataService")
+							local ms = services:FindFirstChild("MutationService")
+							if ds then DataService = require(ds) end
+							if ms then MutationService = require(ms) end
+						end
+					end
+				end
+				
+				if not DataService or not MutationService then
+					warn("[ArenaService] DataService or MutationService not found")
+					return
+				end
+				
 				for _, player in ipairs(game.Players:GetPlayers()) do
-					-- MutationService:GenerateMutation call here (requires ProfileService link)
-					print("[ArenaService] Triggering mutation for:", player.Name)
+					local profile = DataService:GetPlayerData(player)
+					if profile then
+						local pityCounter = profile.PityCounter or 0
+						local mutation = MutationService:GenerateMutation(player, pityCounter)
+						
+						-- Update pity counter
+						if mutation.rarity == "Legendary" or mutation.rarity == "Secret" then
+							profile.PityCounter = 0
+							print("[ArenaService] Pity reset for", player.Name)
+						else
+							profile.PityCounter = pityCounter + 1
+							print("[ArenaService] Pity incremented to", profile.PityCounter, "for", player.Name)
+						end
+						
+						DataService:SavePlayerData(player, profile)
+						
+						-- Broadcast to clients
+						local RemoteEvents = ReplicatedStorage:FindFirstChild("src")
+						if RemoteEvents then
+							RemoteEvents = RemoteEvents:FindFirstChild("shared")
+							if RemoteEvents then
+								RemoteEvents = RemoteEvents:FindFirstChild("RemoteEvents")
+								if RemoteEvents then
+									RemoteEvents = require(RemoteEvents)
+									if RemoteEvents.MutationBroadcast then
+										RemoteEvents.MutationBroadcast:FireClient(player, {
+											mutationId = mutation.mutationId,
+											rarity = mutation.rarity,
+											duration = mutation.duration,
+										})
+									end
+								end
+							end
+						end
+					else
+						warn("[ArenaService] No profile for", player.Name)
+					end
 				end
 			end
 		end
