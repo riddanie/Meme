@@ -1,0 +1,39 @@
+{
+  "name": "roblox-mutation-arena",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Packages": {
+        "$path": "Packages"
+      },
+      "src": {
+        "$className": "Folder",
+        "shared": {
+          "$path": "src/shared"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "src": {
+        "$className": "Folder",
+        "server": {
+          "$path": "src/server"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "src": {
+          "$className": "Folder",
+          "client": {
+            "$path": "src/client"
+          }
+        }
+      }
+    }
+  }
+}
