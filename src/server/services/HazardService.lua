@@ -470,11 +470,13 @@ function HazardService:OnPlayerDeath(player: Player)
 				if ds then
 					DataService = require(ds)
 					local profile = DataService:GetPlayerData(player)
-					if profile then
-						profile.DNA = (profile.DNA or 0) + dnaReward
-						profile.Matches = (profile.Matches or 0) + 1
+					if profile and profile.Data then
+						-- BUG #9 FIX: Map to schema fields
+						profile.Data.MutagenDNA = (profile.Data.MutagenDNA or 0) + dnaReward
+						profile.Data.TotalDeaths = (profile.Data.TotalDeaths or 0) + 1
+						
 						DataService:SavePlayerData(player, profile)
-						print("[HazardService] Saved", dnaReward, "DNA for", player.Name)
+						print("[HazardService] Saved", dnaReward, "DNA (Total:", profile.Data.MutagenDNA, ") for", player.Name)
 					end
 				end
 			end

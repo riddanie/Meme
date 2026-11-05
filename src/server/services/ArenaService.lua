@@ -105,17 +105,17 @@ function ArenaService:StartMatch()
 				for _, player in ipairs(game.Players:GetPlayers()) do
 					local success, err = pcall(function()
 						local profile = DataService:GetPlayerData(player)
-						if profile then
-							local pityCounter = profile.PityCounter or 0
+						if profile and profile.Data then
+							local pityCounter = profile.Data.PityCounter or 0
 							local mutation = MutationService:GenerateMutation(player, pityCounter)
 							
-							-- Update pity counter
+							-- Update pity counter in schema
 							if mutation.rarity == "Legendary" or mutation.rarity == "Secret" then
-								profile.PityCounter = 0
+								profile.Data.PityCounter = 0
 								print("[ArenaService] Pity reset for", player.Name)
 							else
-								profile.PityCounter = pityCounter + 1
-								print("[ArenaService] Pity incremented to", profile.PityCounter, "for", player.Name)
+								profile.Data.PityCounter = pityCounter + 1
+								print("[ArenaService] Pity incremented to", profile.Data.PityCounter, "for", player.Name)
 							end
 							
 							DataService:SavePlayerData(player, profile)
