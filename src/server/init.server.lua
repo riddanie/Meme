@@ -1,22 +1,36 @@
 --!strict
 -- Server entry point - Knit initialization
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
--- Wait for Knit package (must be installed via Wally or manually)
-local Knit = require(ReplicatedStorage.Packages.Knit)
+-- TODO: Install Knit via Wally/Roblox package manager
+-- For now, manually require services
 
--- Add services
-Knit.AddServices(ServerScriptService.Server.Services)
+local serverFolder = ServerScriptService:FindFirstChild("src")
+if serverFolder then
+	local server = serverFolder:FindFirstChild("server")
+	if server then
+		local services = server:FindFirstChild("services")
+		if services then
+			for _, service in ipairs(services:GetChildren()) do
+				if service:IsA("ModuleScript") then
+					local success, result = pcall(require, service)
+					if success then
+						print("[Server] Loaded service:", service.Name)
+					else
+						warn("[Server] Failed to load service:", service.Name, result)
+					end
+				end
+			end
+		end
+	end
+end
 
--- Start Knit
-Knit.Start():andThen(function()
-	print("[Server] Knit started successfully")
-	
-	-- Start first arena match after 5s grace period
-	task.wait(5)
-	local ArenaService = Knit.GetService("ArenaService")
-	ArenaService:StartMatch()
-	
-end):catch(warn)
+print("[Server] Initialized (Knit framework pending installation)")
+
+-- TODO: Replace with Knit.Start() after Wally install
+-- Knit.AddServices(ServerScriptService.src.server.services)
+-- Knit.Start():andThen(function()
+-- 	local ArenaService = Knit.GetService("ArenaService")
+-- 	ArenaService:StartMatch()
+-- end):catch(warn)
