@@ -205,16 +205,6 @@ function StoreController:UpdateBalance(dna: number)
 	end
 end
 
--- Listen for balance updates from server
-function StoreController:KnitInit()
-	-- Receive balance sync from StoreService
-	if RemoteEvents.UpdateBalance then
-		RemoteEvents.UpdateBalance.OnClientEvent:Connect(function(balance: number)
-			self:UpdateBalance(balance)
-		end)
-	end
-end
-
 -- Purchase selected cosmetic
 function StoreController:PurchaseSelected()
 	if not selectedCosmetic then
@@ -285,7 +275,11 @@ function StoreController:KnitStart()
 	RemoteEvents.GetEvents()
 
 	-- Listen for balance updates from server
-	-- TODO: Hook to DataService balance updates
+	if RemoteEvents.UpdateBalance then
+		RemoteEvents.UpdateBalance.OnClientEvent:Connect(function(balance: number)
+			self:UpdateBalance(balance)
+		end)
+	end
 end
 
 return StoreController
