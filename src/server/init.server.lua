@@ -1,4 +1,3 @@
---!strict
 -- Server entry point - Knit initialization
 
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -27,10 +26,3 @@ if serverFolder then
 end
 
 print("[Server] Initialized (Knit framework pending installation)")
-
--- TODO: Replace with Knit.Start() after Wally install
--- Knit.AddServices(ServerScriptService.src.server.services)
--- Knit.Start():andThen(function()
--- 	local ArenaService = Knit.GetService("ArenaService")
--- 	ArenaService:StartMatch()
--- end):catch(warn)
