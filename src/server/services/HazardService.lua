@@ -462,29 +462,25 @@ function HazardService:GetActiveHazards()
 end
 
 -- Damage check (for player collision)
-function HazardService:CheckHazardDamage(position: Vector3): { damage: number, hazard: string }
-	local totalDamage = 0
-	local hazardType = "none"
+function HazardService:CheckHazardDamage(player: Player, damage: number, hazardType: string): boolean
+	local character = player.Character
+	if not character then return false end
 	
-	for id, hazard in pairs(self._activeHazards) do
-		if hazard.type == "tsunami" then
-			local dist = (position - hazard.position).Magnitude
-			if dist < hazard.radius then
-				totalDamage = totalDamage + hazard.damage
-				hazardType = "tsunami"
-			end
-		elseif hazard.type == "lava" then
-			if position.Y < hazard.baseHeight + 5 then
-				totalDamage = totalDamage + hazard.damage
-				hazardType = "lava"
-			end
-		end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return false end
+	
+	-- Apply damage
+	humanoid:TakeDamage(damage)
+	
+	print("[HazardService] Player took", damage, "damage from", hazardType, ":", player.Name)
+	
+	-- Check if player died
+	if humanoid.Health <= 0 then
+		self:TriggerRagdoll(player)
+		return true
 	end
 	
-	return {
-		damage = totalDamage,
-		hazard = hazardType,
-	}
+	return false
 end
 
 print("[HazardService] Module loaded")
@@ -514,13 +510,19 @@ local function BroadcastPlayerDeath(player: Player, killerId: number?, mutationU
 end
 
 -- Check for void/fall death
-function HazardService:CheckFallDamage(player: Player)
+function HazardService:CheckFallDamage(player: Player): boolean
 	local character = player.Character
 	if character and character:FindFirstChild("HumanoidRootPart") then
 		local hrp = character.HumanoidRootPart
 		-- Kill plane at Y = -50
 		if hrp.Position.Y < -50 then
 			print("[HazardService] Player fell into void:", player.Name)
+			
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid:TakeDamage(100) -- Guaranteed death
+			end
+			
 			return true -- Player died from fall
 		end
 	end

@@ -17,7 +17,7 @@ local GameConfig = {
 	-- Server capacity
 	MAX_PLAYERS_PER_SERVER = 16,
 	PARTCACHE_POOL_SIZE = 16,
-	RAGDOLL_VARIANTS = 10,
+	RAGDOLL_VARIANTS = 11,
 	
 	-- Performance limits
 	MAX_PART_COUNT = 2500,

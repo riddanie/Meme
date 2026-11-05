@@ -1,4 +1,4 @@
--- Server entry point - Knit initialization
+-- Server entry point - Manual service initialization (Knit not installed)
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,25 +10,40 @@ local RemoteEvents = require(RemoteEventsModule)
 RemoteEvents.CreateEvents()
 print("[Server] RemoteEvents created")
 
--- TODO: Install Knit via Wally/Roblox package manager
--- For now, manually require services
-
-local ArenaService = nil
+-- Manual service loading (Knit.CreateService replaced)
+local services = {}
 
 local serverFolder = ServerScriptService:FindFirstChild("src")
 if serverFolder then
 	local server = serverFolder:FindFirstChild("server")
 	if server then
-		local services = server:FindFirstChild("services")
-		if services then
-			for _, service in ipairs(services:GetChildren()) do
+		local serviceFolder = server:FindFirstChild("services")
+		if serviceFolder then
+			for _, service in ipairs(serviceFolder:GetChildren()) do
 				if service:IsA("ModuleScript") then
 					local success, result = pcall(require, service)
 					if success then
 						print("[Server] Loaded service:", service.Name)
-						if service.Name == "ArenaService" then
-							ArenaService = result
-						end
+						services[service.Name] = result
+					else
+						warn("[Server] Failed to load service:", service.Name, result)
+					end
+				end
+			end
+		end
+	end
+end
+
+-- Auto-start ArenaService on first player join
+local ArenaService = services["ArenaService"]
+Players.PlayerAdded:Connect(function(player)
+	if ArenaService and ArenaService.StartMatch then
+		ArenaService:StartMatch()
+		print("[Server] Match started for player:", player.Name)
+	end
+end)
+
+print("[Server] Initialized (manual service loading)")
 					else
 						warn("[Server] Failed to load service:", service.Name, result)
 					end

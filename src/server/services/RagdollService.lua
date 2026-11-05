@@ -88,10 +88,12 @@ function RagdollService:ApplyMutation(player: Player, mutationId: string)
 	-- Remove old ragdoll if exists
 	if self._activeRagdolls[player] then
 		local oldRagdoll = self._activeRagdolls[player]
-		self._pools[oldRagdoll:FindFirstChild("HumanoidRootPart").variant or variant]:ReturnPart(oldRagdoll)
+		local oldVariant = oldRagdoll:GetAttribute("variant") or variant
+		self._pools[oldVariant]:ReturnPart(oldRagdoll)
 	end
 	
 	local ragdoll = self._pools[variant]:GetPart()
+	ragdoll:SetAttribute("variant", variant)
 	ragdoll.Parent = workspace
 	self._activeRagdolls[player] = ragdoll
 	
