@@ -577,8 +577,8 @@ function HazardService:SpawnPlayer(player: Player)
 		Humanoid.Died:Connect(function()
 			self:OnPlayerDeath(player)
 		end)
-		end)
 	end
+end
 end
 
 -- Handle player death + DNA payout
