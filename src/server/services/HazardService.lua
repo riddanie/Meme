@@ -39,23 +39,64 @@ function HazardService:CheckHazardDamage(player: Player, damage: number, hazardT
 end
 
 function HazardService:TriggerRagdoll(player: Player)
-	-- Placeholder for PartCache ragdoll pool (Week 2)
-	print("[HazardService] Triggering ragdoll for", player.Name)
-	
-	local character = player.Character
-	if character then
-		-- Disable animations
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		if humanoid then
-			humanoid.PlatformStand = true
-		end
-		
-		-- Physics impact
-		local hrp = character:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			hrp.AssemblyLinearVelocity = Vector3.new(math.random(-20, 20), 50, math.random(-20, 20))
+	-- Load RagdollService
+	local RagdollService = nil
+	local src = game.ServerScriptService:FindFirstChild("src")
+	if src then
+		local server = src:FindFirstChild("server")
+		if server then
+			local services = server:FindFirstChild("services")
+			if services then
+				local rs = services:FindFirstChild("RagdollService")
+				if rs then
+					RagdollService = require(rs)
+				end
+			end
 		end
 	end
+	
+	if not RagdollService then
+		warn("[HazardService] RagdollService not found")
+		return
+	end
+	
+	local character = player.Character
+	if not character then return end
+	
+	-- Apply ragdoll variant based on active mutation
+	local mutationId = "DEFAULT" -- TODO: Get from active mutation
+	local ragdoll = RagdollService:ApplyMutation(player, mutationId)
+	
+	if ragdoll then
+		-- Position ragdoll at player death location
+		local hrp = character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			ragdoll:SetPrimaryPartCFrame(hrp.CFrame)
+			
+			-- Apply death physics impulse
+			local ragdollHRP = ragdoll:FindFirstChild("HumanoidRootPart")
+			if ragdollHRP then
+				ragdollHRP.AssemblyLinearVelocity = Vector3.new(
+					math.random(-20, 20), 
+					50, 
+					math.random(-20, 20)
+				)
+			end
+		end
+		
+		-- Cleanup after 5 seconds
+		task.delay(5, function()
+			RagdollService:ReturnRagdoll(player)
+		end)
+	end
+	
+	-- Disable player character physics
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.PlatformStand = true
+	end
+	
+	print("[HazardService] Ragdoll triggered for", player.Name)
 end
 
 -- Tsunami Boba: Knockback + damage zone
