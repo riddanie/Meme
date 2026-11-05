@@ -46,7 +46,7 @@ end
 function HazardService:SpawnAnvilRain()
 	print("[HazardService] Anvil Rain spawned")
 	
-	local anvil = {
+	local anvilData = {
 		id = "anvil_" .. tick(),
 		type = "anvil",
 		damage = 15,
@@ -55,25 +55,48 @@ function HazardService:SpawnAnvilRain()
 		active = true,
 	}
 	
-	self._activeHazards[anvil.id] = anvil
+	self._activeHazards[anvilData.id] = anvilData
 	
-	-- Spawn anvils periodically
+	-- Spawn physical anvils
 	local spawnCount = 0
-	local spawnInterval = task.spawn(function()
-		while anvil.active and spawnCount < 5 do
+	task.spawn(function()
+		while anvilData.active and spawnCount < 8 do
 			spawnCount = spawnCount + 1
-			-- Anvil spawn logic (physics part)
-			task.wait(2)
+			
+			local anvilPart = Instance.new("Part")
+			anvilPart.Name = "Hazard_Anvil"
+			anvilPart.Size = Vector3.new(2, 2, 2)
+			anvilPart.Material = Enum.Material.Metal
+			anvilPart.Color = Color3.fromRGB(80, 80, 80)
+			anvilPart.CollisionGroup = "Hazards"
+			
+			-- Random position above arena
+			local rx = math.random(-80, 80)
+			local rz = math.random(-80, 80)
+			anvilPart.Position = Vector3.new(rx, 100, rz)
+			anvilPart.Parent = workspace
+			
+			-- Add touch damage
+			anvilPart.Touched:Connect(function(otherPart)
+				local player = game.Players:GetPlayerFromCharacter(otherPart.Parent)
+				if player then
+					print("[HazardService] Anvil hit player:", player.Name)
+					anvilPart:Destroy()
+				end
+			end)
+			
+			Debris:AddItem(anvilPart, 5)
+			task.wait(1.2)
 		end
 	end)
 	
-	task.delay(anvil.duration, function()
-		anvil.active = false
-		self._activeHazards[anvil.id] = nil
+	task.delay(anvilData.duration, function()
+		anvilData.active = false
+		self._activeHazards[anvilData.id] = nil
 		print("[HazardService] Anvil Rain ended")
 	end)
 	
-	return anvil
+	return anvilData
 end
 
 -- Lava Rising: DoT + climb-out mechanic
