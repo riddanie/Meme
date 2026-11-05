@@ -14,6 +14,7 @@
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "init": {
+        "$className": "Script",
         "$path": "src/server/init.server.lua"
       },
       "src": {
@@ -28,6 +29,7 @@
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
         "init": {
+          "$className": "LocalScript",
           "$path": "src/client/init.client.lua"
         },
         "src": {
