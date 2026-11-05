@@ -132,9 +132,195 @@ function HazardService:SpawnLavaRising()
 	return lava
 end
 
+-- Gravity Vortex (Zone D): Radial pull + rotational force
+function HazardService:SpawnGravityVortex()
+	print("[HazardService] Gravity Vortex spawned")
+	
+	local vortex = {
+		id = "vortex_" .. tick(),
+		type = "vortex",
+		position = Vector3.new(0, 5, 0), -- Center of arena
+		outerRadius = 30,
+		coreRadius = 8,
+		pullStrength = 150,
+		coreDamage = 8,
+		outerDamage = 3,
+		duration = 12,
+		active = true,
+	}
+	
+	self._activeHazards[vortex.id] = vortex
+	
+	-- Create vortex visual (placeholder sphere)
+	local vortexPart = Instance.new("Part")
+	vortexPart.Name = "Hazard_Vortex"
+	vortexPart.Shape = Enum.PartType.Ball
+	vortexPart.Size = Vector3.new(vortex.coreRadius * 2, vortex.coreRadius * 2, vortex.coreRadius * 2)
+	vortexPart.Material = Enum.Material.Neon
+	vortexPart.Color = Color3.fromRGB(138, 43, 226) -- Purple
+	vortexPart.Transparency = 0.5
+	vortexPart.CanCollide = false
+	vortexPart.Anchored = true
+	vortexPart.Position = vortex.position
+	vortexPart.CollisionGroup = "Hazards"
+	vortexPart.Parent = workspace
+	
+	-- Apply radial force to players in range
+	local forceConnection = RunService.Heartbeat:Connect(function(dt)
+		if not vortex.active then return end
+		
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			local character = player.Character
+			if character and character:FindFirstChild("HumanoidRootPart") then
+				local hrp = character.HumanoidRootPart
+				local dist = (hrp.Position - vortex.position).Magnitude
+				
+				if dist < vortex.outerRadius then
+					-- Pull toward center
+					local direction = (vortex.position - hrp.Position).Unit
+					local pullForce = direction * vortex.pullStrength
+					
+					-- Apply velocity (simplified physics)
+					if hrp:FindFirstChild("BodyVelocity") == nil then
+						local bv = Instance.new("BodyVelocity")
+						bv.Velocity = pullForce * dt
+						bv.MaxForce = Vector3.new(5000, 0, 5000)
+						bv.Parent = hrp
+						Debris:AddItem(bv, 0.1)
+					end
+					
+					-- Damage based on zone
+					if dist < vortex.coreRadius then
+						print("[HazardService] Vortex core damage:", player.Name, vortex.coreDamage)
+					else
+						print("[HazardService] Vortex outer damage:", player.Name, vortex.outerDamage)
+					end
+				end
+			end
+		end
+	end)
+	
+	task.delay(vortex.duration, function()
+		vortex.active = false
+		forceConnection:Disconnect()
+		vortexPart:Destroy()
+		self._activeHazards[vortex.id] = nil
+		print("[HazardService] Gravity Vortex ended")
+	end)
+	
+	return vortex
+end
+
+-- Electric Grid (Zone E): Wave pattern electrified tiles
+function HazardService:SpawnElectricGrid()
+	print("[HazardService] Electric Grid spawned")
+	
+	local grid = {
+		id = "grid_" .. tick(),
+		type = "grid",
+		tileSize = 7,
+		gridDimension = 5, -- 5x5 grid = 25 tiles
+		damage = 12,
+		stunDuration = 0.5,
+		knockupForce = 30,
+		waveCount = 3,
+		waveInterval = 4,
+		duration = 12,
+		active = true,
+	}
+	
+	self._activeHazards[grid.id] = grid
+	
+	-- Create grid tiles
+	local tiles = {}
+	local startX = -17.5 -- Center 5x5 grid (35/2 = 17.5)
+	local startZ = -17.5
+	
+	for row = 1, grid.gridDimension do
+		for col = 1, grid.gridDimension do
+			local tile = Instance.new("Part")
+			tile.Name = "Hazard_GridTile"
+			tile.Size = Vector3.new(grid.tileSize, 0.5, grid.tileSize)
+			tile.Position = Vector3.new(
+				startX + (col - 1) * grid.tileSize,
+				0.25,
+				startZ + (row - 1) * grid.tileSize
+			)
+			tile.Material = Enum.Material.Neon
+			tile.Color = Color3.fromRGB(10, 10, 10) -- Dark (off state)
+			tile.Anchored = true
+			tile.CanCollide = false
+			tile.CollisionGroup = "Hazards"
+			tile.Parent = workspace
+			
+			table.insert(tiles, tile)
+		end
+	end
+	
+	-- Wave animation
+	local waveCount = 0
+	task.spawn(function()
+		while grid.active and waveCount < grid.waveCount do
+			waveCount = waveCount + 1
+			print("[HazardService] Electric Grid wave", waveCount)
+			
+			-- Activate random tiles
+			local activeTiles = {}
+			for i = 1, math.random(8, 12) do
+				local tile = tiles[math.random(1, #tiles)]
+				tile.Color = Color3.fromRGB(11, 198, 227) -- Cyan (#0BC6E3)
+				table.insert(activeTiles, tile)
+			end
+			
+			-- Check player collisions
+			task.delay(0.1, function()
+				for _, tile in ipairs(activeTiles) do
+					local region = Region3.new(
+						tile.Position - tile.Size / 2,
+						tile.Position + tile.Size / 2
+					)
+					-- Simplified collision check (proper raycast needed for production)
+					for _, player in ipairs(game.Players:GetPlayers()) do
+						local character = player.Character
+						if character and character:FindFirstChild("HumanoidRootPart") then
+							local hrp = character.HumanoidRootPart
+							local dist = (hrp.Position - tile.Position).Magnitude
+							if dist < 5 then
+								print("[HazardService] Electric Grid hit:", player.Name)
+								-- Apply knockup
+								hrp.Velocity = hrp.Velocity + Vector3.new(0, grid.knockupForce, 0)
+							end
+						end
+					end
+				end
+			end)
+			
+			-- Deactivate tiles
+			task.delay(1, function()
+				for _, tile in ipairs(activeTiles) do
+					tile.Color = Color3.fromRGB(10, 10, 10)
+				end
+			end)
+			
+			task.wait(grid.waveInterval)
+		end
+	end)
+	
+	task.delay(grid.duration, function()
+		grid.active = false
+		for _, tile in ipairs(tiles) do
+			tile:Destroy()
+		end
+		self._activeHazards[grid.id] = nil
+		print("[HazardService] Electric Grid ended")
+	end)
+	
+	return grid
+end
+
 -- Cycle through hazards
 function HazardService:CycleHazards()
-	local hazards = { "tsunami", "anvil", "lava" }
+	local hazards = { "tsunami", "anvil", "lava", "vortex", "grid" }
 	local current = table.find(hazards, self._currentHazard) or 1
 	local next = current % #hazards + 1
 	self._currentHazard = hazards[next]
@@ -143,8 +329,12 @@ function HazardService:CycleHazards()
 		return self:SpawnTsunami()
 	elseif self._currentHazard == "anvil" then
 		return self:SpawnAnvilRain()
-	else
+	elseif self._currentHazard == "lava" then
 		return self:SpawnLavaRising()
+	elseif self._currentHazard == "vortex" then
+		return self:SpawnGravityVortex()
+	else
+		return self:SpawnElectricGrid()
 	end
 end
 
