@@ -49,31 +49,69 @@ function StoreService:SyncBalance(player: Player)
 end
 
 function StoreService:HandlePurchaseOrEquip(player: Player, data: any)
-	if not data or not data.cosmeticId then return end
+	if not data or not data.cosmeticId then 
+		warn("[StoreService] Invalid request: missing cosmeticId")
+		return 
+	end
 	
-	print("[StoreService] Processing purchase for", player.Name, "Item:", data.cosmeticId)
+	-- Validate cosmeticId type
+	if type(data.cosmeticId) ~= "string" then
+		warn("[StoreService] Invalid cosmeticId type for", player.Name, "- expected string, got", type(data.cosmeticId))
+		return
+	end
+	
+	-- Load CosmeticDatabase for validation
+	local shared = ReplicatedStorage:FindFirstChild("src"):WaitForChild("shared")
+	local CosmeticDatabase = require(shared:WaitForChild("data"):WaitForChild("CosmeticDatabase"))
+	
+	-- Validate cosmetic exists
+	local cosmetic = CosmeticDatabase.GetCosmetic(data.cosmeticId)
+	if not cosmetic then
+		warn("[StoreService] Invalid cosmetic ID:", data.cosmeticId)
+		return
+	end
 	
 	local ds = script.Parent:FindFirstChild("DataService")
-	if ds then
-		local DataService = require(ds)
-		local profile = DataService:GetPlayerData(player)
-		if profile and profile.Data then
-			-- Mock cosmetic cost (e.g. 100 DNA)
-			local cost = 100
-			local currentDNA = profile.Data.MutagenDNA or 0
-			
-			if currentDNA >= cost then
-				profile.Data.MutagenDNA = currentDNA - cost
-				DataService:SavePlayerData(player, profile)
-				print("[StoreService] Purchase successful! New balance:", profile.Data.MutagenDNA)
-				
-				-- Resync balance
-				self:SyncBalance(player)
-			else
-				warn("[StoreService] Insufficient DNA for", player.Name)
-			end
-		end
+	if not ds then return end
+	
+	local DataService = require(ds)
+	local profile = DataService:GetPlayerData(player)
+	if not profile or not profile.Data then return end
+	
+	-- Initialize owned cosmetics table
+	if not profile.Data.OwnedCosmetics then
+		profile.Data.OwnedCosmetics = {}
 	end
+	
+	-- Check if already owned (prevent duplicate purchase)
+	if profile.Data.OwnedCosmetics[data.cosmeticId] then
+		print("[StoreService] Player already owns", data.cosmeticId, "- equipping instead")
+		-- Just equip, don't charge
+		profile.Data.EquippedCosmetic = data.cosmeticId
+		DataService:SavePlayerData(player, profile)
+		self:SyncBalance(player)
+		return
+	end
+	
+	-- Validate cost and DNA balance
+	local cost = cosmetic.cost
+	local currentDNA = profile.Data.MutagenDNA or 0
+	
+	if currentDNA < cost then
+		warn("[StoreService] Insufficient DNA for", player.Name, "- need", cost, "have", currentDNA)
+		return
+	end
+	
+	-- Process purchase
+	profile.Data.MutagenDNA = currentDNA - cost
+	profile.Data.OwnedCosmetics[data.cosmeticId] = true
+	profile.Data.EquippedCosmetic = data.cosmeticId
+	
+	DataService:SavePlayerData(player, profile)
+	print("[StoreService] Purchase successful! Player:", player.Name, "Item:", data.cosmeticId, "New DNA:", profile.Data.MutagenDNA)
+	
+	-- Resync balance
+	self:SyncBalance(player)
 end
 
 StoreService:Init()

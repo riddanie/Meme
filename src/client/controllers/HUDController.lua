@@ -5,7 +5,25 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
+-- Find Knit (may be missing)
+local Knit
+local kn = ReplicatedStorage:FindFirstChild("Packages")
+if kn then
+	local k = kn:FindFirstChild("Knit")
+	if k then
+		Knit = require(k)
+	end
+end
+
+if not Knit then
+	-- Manual controller if Knit absent
+	Knit = {
+		CreateController = function(self, tbl)
+			return tbl
+		end
+	}
+end
+
 local RemoteEvents = require(ReplicatedStorage:WaitForChild("src"):WaitForChild("shared"):WaitForChild("RemoteEvents"))
 
 local HUDController = Knit.CreateController {
@@ -59,7 +77,7 @@ function HUDController:CreateUI()
 	healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	healthLabel.TextSize = 16
 	healthLabel.Font = Enum.Font.Gotham
-	healthLabel.Text = "Health: 75%"
+	healthLabel.Text = "Health: 100%"
 	healthLabel.TextXAlignment = Enum.TextXAlignment.Left
 	healthLabel.Parent = statsFrame
 	statsLabels["Health"] = healthLabel
@@ -87,7 +105,7 @@ function HUDController:CreateUI()
 	dnaLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
 	dnaLabel.TextSize = 16
 	dnaLabel.Font = Enum.Font.GothamBold
-	dnaLabel.Text = "DNA: 1,247"
+	dnaLabel.Text = "DNA: 0"
 	dnaLabel.TextXAlignment = Enum.TextXAlignment.Left
 	dnaLabel.Parent = statsFrame
 	statsLabels["DNA"] = dnaLabel
@@ -120,7 +138,7 @@ function HUDController:CreateUI()
 	playerCountLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
 	playerCountLabel.TextSize = 32
 	playerCountLabel.Font = Enum.Font.GothamBold
-	playerCountLabel.Text = "8 / 16"
+	playerCountLabel.Text = "0 / 16"
 	playerCountLabel.Parent = playerCountFrame
 	statsLabels["PlayerCount"] = playerCountLabel
 

@@ -36,6 +36,14 @@ end
 
 -- Auto-start ArenaService on first player join
 local ArenaService = services["ArenaService"]
+local HazardService = services["HazardService"]
+
+-- Start respawn loop
+if HazardService and HazardService.StartRespawnLoop then
+	HazardService:StartRespawnLoop()
+	print("[Server] HazardService respawn loop started")
+end
+
 Players.PlayerAdded:Connect(function(player)
 	if ArenaService and ArenaService.StartMatch then
 		ArenaService:StartMatch()

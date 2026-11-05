@@ -12,6 +12,9 @@ HazardService._activeHazards = {} -- [hazardId] = { type, data }
 HazardService._hazardTimer = 0
 HazardService._hazardCycle = 30 -- Switch hazards every 30 seconds
 HazardService._currentHazard = "tsunami"
+HazardService._playerSpawnTimes = {} -- [player.UserId] = tick()
+HazardService._playerDeathTimes = {} -- [player.UserId] = tick()
+HazardService._respawnTime = 15 -- seconds
 
 -- Hazard damage zones (for collision detection)
 local DamageZones = {}
@@ -536,13 +539,13 @@ function HazardService:SpawnPlayer(player: Player)
 		local HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
 		local Humanoid = character:WaitForChild("Humanoid")
 		
-		-- Find random SpawnLocation in Workspace.Map
+		-- Find random SpawnLocation in Workspace.Map.Spawns
 		local map = workspace:FindFirstChild("Map")
 		if map then
-			local spawns = map:FindFirstChildOfClass("SpawnLocation")
-			if spawns then
+			local spawnsFolder = map:FindFirstChild("Spawns")
+			if spawnsFolder then
 				local spawnList = {}
-				for _, part in ipairs(map:GetChildren()) do
+				for _, part in ipairs(spawnsFolder:GetChildren()) do
 					if part:IsA("SpawnLocation") then
 						table.insert(spawnList, part)
 					end
@@ -552,10 +555,16 @@ function HazardService:SpawnPlayer(player: Player)
 					local spawn = spawnList[math.random(1, #spawnList)]
 					HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 3, 0)
 					print("[HazardService] Spawned", player.Name, "at", spawn.Name)
+					
+					-- Track spawn time
+					self._playerSpawnTimes[player.UserId] = tick()
+				else
+					warn("[HazardService] No SpawnLocations in Map.Spawns - spawning at fallback")
+					HumanoidRootPart.CFrame = CFrame.new(100, 5, 100)
 				end
 			else
-				warn("[HazardService] No SpawnLocation found in Map")
-				HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+				warn("[HazardService] Workspace.Map.Spawns folder not found - spawning at fallback")
+				HumanoidRootPart.CFrame = CFrame.new(100, 5, 100)
 			end
 		else
 			warn("[HazardService] Workspace.Map not found")
@@ -568,6 +577,7 @@ function HazardService:SpawnPlayer(player: Player)
 		Humanoid.Died:Connect(function()
 			self:OnPlayerDeath(player)
 		end)
+		end)
 	end
 end
 
@@ -575,8 +585,19 @@ end
 function HazardService:OnPlayerDeath(player: Player)
 	print("[HazardService] Player", player.Name, "died")
 	
-	-- Calculate DNA reward (base 10 DNA per match)
-	local dnaReward = 10
+	-- Track death time for auto-respawn
+	self._playerDeathTimes[player.UserId] = tick()
+	
+	-- Calculate DNA reward using GameConfig constants
+	local survivalTime = 0
+	if self._playerSpawnTimes and self._playerSpawnTimes[player.UserId] then
+		survivalTime = math.floor(tick() - self._playerSpawnTimes[player.UserId])
+	end
+	
+	-- Load GameConfig for constants
+	local GameConfig = require(game.ReplicatedStorage:WaitForChild("src"):WaitForChild("shared"):WaitForChild("config"):WaitForChild("GameConfig"))
+	
+	local dnaReward = GameConfig.BASE_DNA_REWARD + (survivalTime * GameConfig.DNA_PER_SECOND_SURVIVED)
 	
 	-- Get DataService and save reward
 	local DataService = nil
@@ -596,7 +617,7 @@ function HazardService:OnPlayerDeath(player: Player)
 						profile.Data.TotalDeaths = (profile.Data.TotalDeaths or 0) + 1
 						
 						DataService:SavePlayerData(player, profile)
-						print("[HazardService] Saved", dnaReward, "DNA (Total:", profile.Data.MutagenDNA, ") for", player.Name)
+						print("[HazardService] Saved", dnaReward, "DNA (Survival:", survivalTime, "s, Total:", profile.Data.MutagenDNA, ") for", player.Name)
 					end
 				end
 			end
@@ -638,6 +659,36 @@ function HazardService:GrantSpawnProtection(player: Player, duration: number)
 		end)
 		print("[HazardService] Spawn protection granted to", player.Name, "for", duration, "seconds")
 	end
+end
+
+-- Respawn check loop (runs every 1 second)
+function HazardService:StartRespawnLoop()
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			local currentTime = tick()
+			for userId, deathTime in pairs(self._playerDeathTimes) do
+				if currentTime - deathTime >= self._respawnTime then
+					local player = game.Players:GetUserIdFromCharacter(userId)
+					if not player then
+						for _, p in ipairs(game.Players:GetPlayers()) do
+							if p.UserId == userId then
+								player = p
+								break
+							end
+						end
+					end
+					
+					if player and not player.Character then
+						player:LoadCharacter()
+						print("[HazardService] Respawned", player.Name, "after", self._respawnTime, "seconds")
+					end
+					
+					self._playerDeathTimes[userId] = nil
+				end
+			end
+		end
+	end)
 end
 
 return HazardService
