@@ -9,24 +9,23 @@ if ProfileService then
 	ProfileService = require(ProfileService)
 end
 
-local PlayerDataTypes = nil
-local src = game.ReplicatedStorage:FindFirstChild("src")
-if src then
-	local shared = src:FindFirstChild("shared")
-	if shared then
-		local types = shared:FindFirstChild("types")
-		if types then
-			local playerData = types:FindFirstChild("PlayerData")
-			if playerData then
-				PlayerDataTypes = require(playerData)
-			end
-		end
-	end
-end
+-- Define player data schema locally
+local PlayerDataTemplate = {
+	MutagenDNA = 0,
+	UnlockedMutations = {},
+	MasteryLevels = {},
+	PityCounter = 0,
+	OwnedCosmetics = {},
+	GamepassFlags = {
+		StarterPack = false,
+		ChaosMaster = false,
+		RoyalePass = false,
+	},
+	TotalSpins = 0,
+	TotalDeaths = 0,
+}
 
-type PlayerData = PlayerDataTypes.PlayerData
-
-local ProfileTemplate: PlayerData = {
+local ProfileTemplate = {
 	MutagenDNA = 0,
 	UnlockedMutations = {},
 	MasteryLevels = {},
@@ -55,7 +54,7 @@ function ProfileManager.LoadProfile(player: Player)
 		warn("[ProfileService] ProfileService library not installed - using mock profile")
 		-- Return mock profile with default template
 		local mockProfile = {
-			Data = ProfileTemplate,
+			Data = PlayerDataTemplate,
 		}
 		Profiles[player] = mockProfile
 		return mockProfile
