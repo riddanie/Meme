@@ -197,7 +197,8 @@ function HUDController:ShowActiveMutations(mutations: { any })
 		local label = statsLabels["Mutation" .. i]
 		if label then
 			if mutations[i] then
-				label.Text = "• " .. mutations[i].id .. " (" .. mutations[i].duration .. "s)"
+				local durationText = mutations[i].duration == -1 and "PERM" or (mutations[i].duration .. "s")
+				label.Text = "• " .. mutations[i].id .. " (" .. durationText .. ")"
 			else
 				label.Text = ""
 			end
