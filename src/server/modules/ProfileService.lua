@@ -2,8 +2,27 @@
 -- ProfileService wrapper with schema definition
 -- Install ProfileService from: https://madstudiorblx.github.io/ProfileService/
 
-local ProfileService = require(game.ServerScriptService.ProfileService)
-local PlayerDataTypes = require(game.ReplicatedStorage.Shared.Types.PlayerData)
+-- ProfileService library must be installed in ServerScriptService
+-- Get from: https://madstudiorblx.github.io/ProfileService/
+local ProfileService = game.ServerScriptService:FindFirstChild("ProfileService")
+if ProfileService then
+	ProfileService = require(ProfileService)
+end
+
+local PlayerDataTypes = nil
+local src = game.ReplicatedStorage:FindFirstChild("src")
+if src then
+	local shared = src:FindFirstChild("shared")
+	if shared then
+		local types = shared:FindFirstChild("types")
+		if types then
+			local playerData = types:FindFirstChild("PlayerData")
+			if playerData then
+				PlayerDataTypes = require(playerData)
+			end
+		end
+	end
+end
 
 type PlayerData = PlayerDataTypes.PlayerData
 
@@ -32,6 +51,16 @@ local Profiles = {}
 local ProfileManager = {}
 
 function ProfileManager.LoadProfile(player: Player)
+	if not ProfileService then
+		warn("[ProfileService] ProfileService library not installed - using mock profile")
+		-- Return mock profile with default template
+		local mockProfile = {
+			Data = ProfileTemplate,
+		}
+		Profiles[player] = mockProfile
+		return mockProfile
+	end
+	
 	local profile = ProfileStore:LoadProfileAsync("Player_" .. player.UserId)
 	
 	if profile ~= nil then
