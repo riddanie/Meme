@@ -579,7 +579,6 @@ function HazardService:SpawnPlayer(player: Player)
 		end)
 	end
 end
-end
 
 -- Handle player death + DNA payout
 function HazardService:OnPlayerDeath(player: Player)
