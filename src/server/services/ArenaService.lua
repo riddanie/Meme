@@ -11,6 +11,8 @@ ArenaService.__index = ArenaService
 ArenaService._matchActive = false
 ArenaService._timeRemaining = 90
 ArenaService._timerConnection = nil
+ArenaService._hazardConnection = nil
+ArenaService._mutationConnection = nil
 
 -- Find shared modules
 local function getSharedFolder()
@@ -65,6 +67,19 @@ function ArenaService:StartMatch()
 	if HazardService then
 		HazardService:CycleHazards()
 	end
+
+	-- Cycle mutations every 15s
+	self._mutationConnection = task.spawn(function()
+		while self._matchActive do
+			task.wait(15)
+			if self._matchActive then
+				for _, player in ipairs(game.Players:GetPlayers()) do
+					-- MutationService:GenerateMutation call here (requires ProfileService link)
+					print("[ArenaService] Triggering mutation for:", player.Name)
+				end
+			end
+		end
+	end)
 
 	-- Cycle hazards every 30 seconds
 	self._hazardConnection = task.spawn(function()

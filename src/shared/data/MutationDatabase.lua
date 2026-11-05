@@ -248,11 +248,15 @@ local function GetRandomMutation(pityCounter: number): MutationData
 	for _, r in ipairs(RARITY_WEIGHTS) do
 		cumulative = cumulative + r.weight
 		if roll <= cumulative then
-			-- Find first mutation with this rarity
+			-- Collect ALL mutations of selected rarity into pool, then pick random
+			local pool = {}
 			for _, mutation in pairs(MutationDatabase) do
 				if mutation.rarity == r.rarity then
-					return mutation
+					table.insert(pool, mutation)
 				end
+			end
+			if #pool > 0 then
+				return pool[math.random(1, #pool)]
 			end
 		end
 	end
