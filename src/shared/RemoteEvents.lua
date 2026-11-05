@@ -27,10 +27,12 @@ function RemoteEvents.CreateEvents()
 	folder.Parent = ReplicatedStorage
 	
 	for eventName, _ in pairs(RemoteEvents) do
-		local remote = Instance.new("RemoteEvent")
-		remote.Name = eventName
-		remote.Parent = folder
-		RemoteEvents[eventName] = remote
+		if type(RemoteEvents[eventName]) ~= "function" then
+			local remote = Instance.new("RemoteEvent")
+			remote.Name = eventName
+			remote.Parent = folder
+			RemoteEvents[eventName] = remote
+		end
 	end
 end
 
@@ -39,7 +41,9 @@ function RemoteEvents.GetEvents()
 	local folder = ReplicatedStorage:WaitForChild("RemoteEvents")
 	
 	for eventName, _ in pairs(RemoteEvents) do
-		RemoteEvents[eventName] = folder:WaitForChild(eventName)
+		if type(RemoteEvents[eventName]) ~= "function" then
+			RemoteEvents[eventName] = folder:WaitForChild(eventName)
+		end
 	end
 	
 	return RemoteEvents

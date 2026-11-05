@@ -68,6 +68,13 @@ function ArenaService:StartMatch()
 		HazardService:CycleHazards()
 	end
 
+	-- Spawn all players once at match start
+	if HazardService then
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			HazardService:SpawnPlayer(player)
+		end
+	end
+
 	-- Cycle mutations every 15s
 	self._mutationConnection = task.spawn(function()
 		while self._matchActive do
@@ -91,47 +98,53 @@ function ArenaService:StartMatch()
 				end
 				
 				if not DataService or not MutationService then
-					warn("[ArenaService] DataService or MutationService not found")
+					warn("[ArenaService] Required service(s) not found")
 					return
 				end
 				
 				for _, player in ipairs(game.Players:GetPlayers()) do
-					local profile = DataService:GetPlayerData(player)
-					if profile then
-						local pityCounter = profile.PityCounter or 0
-						local mutation = MutationService:GenerateMutation(player, pityCounter)
-						
-						-- Update pity counter
-						if mutation.rarity == "Legendary" or mutation.rarity == "Secret" then
-							profile.PityCounter = 0
-							print("[ArenaService] Pity reset for", player.Name)
-						else
-							profile.PityCounter = pityCounter + 1
-							print("[ArenaService] Pity incremented to", profile.PityCounter, "for", player.Name)
-						end
-						
-						DataService:SavePlayerData(player, profile)
-						
-						-- Broadcast to clients
-						local RemoteEvents = ReplicatedStorage:FindFirstChild("src")
-						if RemoteEvents then
-							RemoteEvents = RemoteEvents:FindFirstChild("shared")
+					local success, err = pcall(function()
+						local profile = DataService:GetPlayerData(player)
+						if profile then
+							local pityCounter = profile.PityCounter or 0
+							local mutation = MutationService:GenerateMutation(player, pityCounter)
+							
+							-- Update pity counter
+							if mutation.rarity == "Legendary" or mutation.rarity == "Secret" then
+								profile.PityCounter = 0
+								print("[ArenaService] Pity reset for", player.Name)
+							else
+								profile.PityCounter = pityCounter + 1
+								print("[ArenaService] Pity incremented to", profile.PityCounter, "for", player.Name)
+							end
+							
+							DataService:SavePlayerData(player, profile)
+							
+							-- Broadcast to clients
+							local RemoteEvents = ReplicatedStorage:FindFirstChild("src")
 							if RemoteEvents then
-								RemoteEvents = RemoteEvents:FindFirstChild("RemoteEvents")
+								RemoteEvents = RemoteEvents:FindFirstChild("shared")
 								if RemoteEvents then
-									RemoteEvents = require(RemoteEvents)
-									if RemoteEvents.MutationBroadcast then
-										RemoteEvents.MutationBroadcast:FireClient(player, {
-											mutationId = mutation.mutationId,
-											rarity = mutation.rarity,
-											duration = mutation.duration,
-										})
+									RemoteEvents = RemoteEvents:FindFirstChild("RemoteEvents")
+									if RemoteEvents then
+										RemoteEvents = require(RemoteEvents)
+										if RemoteEvents.MutationBroadcast then
+											RemoteEvents.MutationBroadcast:FireClient(player, {
+												mutationId = mutation.mutationId,
+												rarity = mutation.rarity,
+												duration = mutation.duration,
+											})
+										end
 									end
 								end
 							end
+						else
+							warn("[ArenaService] No profile for", player.Name)
 						end
-					else
-						warn("[ArenaService] No profile for", player.Name)
+					end)
+					
+					if not success then
+						warn("[ArenaService] Mutation generation failed:", err)
 					end
 				end
 			end

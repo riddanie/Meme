@@ -371,6 +371,30 @@ end
 
 print("[HazardService] Module loaded")
 
+-- Broadcast player death to clients
+local function BroadcastPlayerDeath(player: Player, killerId: number?, mutationUsed: string?)
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local src = ReplicatedStorage:FindFirstChild("src")
+	if src then
+		local shared = src:FindFirstChild("shared")
+		if shared then
+			local re = shared:FindFirstChild("RemoteEvents")
+			if re then
+				re = require(re)
+				if re.PlayerDeath then
+					re.PlayerDeath:FireAllClients({
+						playerId = player.UserId,
+						killerId = killerId,
+						mutationUsed = mutationUsed,
+						rewards = { dna = 10, placement = 1 }
+					})
+					print("[HazardService] Broadcasted death for", player.Name)
+				end
+			end
+		end
+	end
+end
+
 -- Check for void/fall death
 function HazardService:CheckFallDamage(player: Player)
 	local character = player.Character
@@ -383,6 +407,98 @@ function HazardService:CheckFallDamage(player: Player)
 		end
 	end
 	return false
+end
+
+-- Spawn player at Builder's SpawnLocation parts
+function HazardService:SpawnPlayer(player: Player)
+	local character = player.Character or player.CharacterAdded:Wait()
+	if character then
+		local HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
+		local Humanoid = character:WaitForChild("Humanoid")
+		
+		-- Find random SpawnLocation in Workspace.Map
+		local map = workspace:FindFirstChild("Map")
+		if map then
+			local spawns = map:FindFirstChildOfClass("SpawnLocation")
+			if spawns then
+				local spawnList = {}
+				for _, part in ipairs(map:GetChildren()) do
+					if part:IsA("SpawnLocation") then
+						table.insert(spawnList, part)
+					end
+				end
+				
+				if #spawnList > 0 then
+					local spawn = spawnList[math.random(1, #spawnList)]
+					HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 3, 0)
+					print("[HazardService] Spawned", player.Name, "at", spawn.Name)
+				end
+			else
+				warn("[HazardService] No SpawnLocation found in Map")
+				HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+			end
+		else
+			warn("[HazardService] Workspace.Map not found")
+		end
+		
+		-- Grant spawn protection
+		self:GrantSpawnProtection(player, 10)
+		
+		-- Wire Humanoid.Died for death payout
+		Humanoid.Died:Connect(function()
+			self:OnPlayerDeath(player)
+		end)
+	end
+end
+
+-- Handle player death + DNA payout
+function HazardService:OnPlayerDeath(player: Player)
+	print("[HazardService] Player", player.Name, "died")
+	
+	-- Calculate DNA reward (base 10 DNA per match)
+	local dnaReward = 10
+	
+	-- Get DataService and save reward
+	local DataService = nil
+	local src = game.ServerScriptService:FindFirstChild("src")
+	if src then
+		local server = src:FindFirstChild("server")
+		if server then
+			local services = server:FindFirstChild("services")
+			if services then
+				local ds = services:FindFirstChild("DataService")
+				if ds then
+					DataService = require(ds)
+					local profile = DataService:GetPlayerData(player)
+					if profile then
+						profile.DNA = (profile.DNA or 0) + dnaReward
+						profile.Matches = (profile.Matches or 0) + 1
+						DataService:SavePlayerData(player, profile)
+						print("[HazardService] Saved", dnaReward, "DNA for", player.Name)
+					end
+				end
+			end
+		end
+	end
+	
+	-- Broadcast death to clients
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local src2 = ReplicatedStorage:FindFirstChild("src")
+	if src2 then
+		local shared = src2:FindFirstChild("shared")
+		if shared then
+			local re = shared:FindFirstChild("RemoteEvents")
+			if re then
+				re = require(re)
+				if re.PlayerDeath then
+					re.PlayerDeath:FireAllClients({
+						playerId = player.UserId,
+						rewards = { dna = dnaReward, placement = 1 }
+					})
+				end
+			end
+		end
+	end
 end
 
 -- Grant spawn protection (forcefield)

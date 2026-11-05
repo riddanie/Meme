@@ -4,6 +4,13 @@
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerScripts = player:WaitForChild("PlayerScripts")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Load RemoteEvents
+local RemoteEventsModule = ReplicatedStorage:WaitForChild("src"):WaitForChild("shared"):WaitForChild("RemoteEvents")
+local RemoteEvents = require(RemoteEventsModule)
+RemoteEvents.GetEvents()
+print("[Client] RemoteEvents loaded")
 
 -- TODO: Install Knit via Wally/Roblox package manager
 -- For now, manually require controllers
@@ -19,6 +26,10 @@ if srcFolder then
 					local success, result = pcall(require, controller)
 					if success then
 						print("[Client] Loaded controller:", controller.Name)
+						-- Auto-start each controller
+						if result.KnitStart then
+							result:KnitStart()
+						end
 					else
 						warn("[Client] Failed to load controller:", controller.Name, result)
 					end
