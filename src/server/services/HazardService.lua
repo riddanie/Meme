@@ -16,6 +16,48 @@ HazardService._currentHazard = "tsunami"
 -- Hazard damage zones (for collision detection)
 local DamageZones = {}
 
+function HazardService:CheckHazardDamage(player: Player, damage: number, hazardType: string)
+	local character = player.Character
+	if not character then return end
+	
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 then return end
+	
+	-- Apply damage
+	humanoid:TakeDamage(damage)
+	
+	-- Check for death (ragdoll + payout)
+	if humanoid.Health <= 0 then
+		print("[HazardService] Player killed by", hazardType, ":", player.Name)
+		
+		-- Ragdoll trigger
+		self:TriggerRagdoll(player)
+		
+		-- Broadcast death & DNA payout
+		self:BroadcastPlayerDeath(player)
+	end
+end
+
+function HazardService:TriggerRagdoll(player: Player)
+	-- Placeholder for PartCache ragdoll pool (Week 2)
+	print("[HazardService] Triggering ragdoll for", player.Name)
+	
+	local character = player.Character
+	if character then
+		-- Disable animations
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.PlatformStand = true
+		end
+		
+		-- Physics impact
+		local hrp = character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			hrp.AssemblyLinearVelocity = Vector3.new(math.random(-20, 20), 50, math.random(-20, 20))
+		end
+	end
+end
+
 -- Tsunami Boba: Knockback + damage zone
 function HazardService:SpawnTsunami()
 	print("[HazardService] Tsunami Boba spawned")
@@ -33,8 +75,31 @@ function HazardService:SpawnTsunami()
 	
 	self._activeHazards[tsunami.id] = tsunami
 	
-	-- Simulate wave movement
+	-- Check for player hits every heartbeat
+	local connection
+	connection = RunService.Heartbeat:Connect(function()
+		if not tsunami.active then return end
+		
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			local character = player.Character
+			if character and character:FindFirstChild("HumanoidRootPart") then
+				local hrp = character.HumanoidRootPart
+				local dist = (hrp.Position - tsunami.position).Magnitude
+				
+				if dist < tsunami.radius then
+					self:CheckHazardDamage(player, tsunami.damage, "Tsunami")
+					
+					-- Apply knockback
+					hrp.AssemblyLinearVelocity = hrp.AssemblyLinearVelocity + Vector3.new(0, 30, tsunami.knockback)
+				end
+			end
+		end
+	end)
+	
+	-- Cleanup
 	task.delay(tsunami.duration, function()
+		tsunami.active = false
+		connection:Disconnect()
 		self._activeHazards[tsunami.id] = nil
 		print("[HazardService] Tsunami ended")
 	end)
@@ -80,7 +145,7 @@ function HazardService:SpawnAnvilRain()
 			anvilPart.Touched:Connect(function(otherPart)
 				local player = game.Players:GetPlayerFromCharacter(otherPart.Parent)
 				if player then
-					print("[HazardService] Anvil hit player:", player.Name)
+					self:CheckHazardDamage(player, anvilData.damage, "Anvil")
 					anvilPart:Destroy()
 				end
 			end)
@@ -119,6 +184,18 @@ function HazardService:SpawnLavaRising()
 	local riseConnection = RunService.Heartbeat:Connect(function(dt)
 		if lava.active then
 			lava.baseHeight = lava.baseHeight + (lava.riseSpeed * dt)
+			
+			-- Check for players below lava height
+			for _, player in ipairs(game.Players:GetPlayers()) do
+				local character = player.Character
+				if character and character:FindFirstChild("HumanoidRootPart") then
+					local hrp = character.HumanoidRootPart
+					
+					if hrp.Position.Y < lava.baseHeight then
+						self:CheckHazardDamage(player, lava.damage * dt, "Lava")
+					end
+				end
+			end
 		end
 	end)
 	
