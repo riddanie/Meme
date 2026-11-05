@@ -30,7 +30,7 @@ local MutationDatabase: { [string]: MutationData } = {
 		name = "BRAINROT",
 		rarity = "Common",
 		chance = 0.50,
-		color = Color3.fromRGB(68, 68, 68),
+		color = Color3.fromRGB(119, 119, 119),
 		duration = 15,
 		vfx = {
 			type = "particles",
@@ -40,7 +40,7 @@ local MutationDatabase: { [string]: MutationData } = {
 		sfx = "rbxassetid://[BRUH_SOUND]",
 		gameplay = {
 			type = "cosmetic",
-			effect = "Random emotes play, chat flooded with brainrot memes",
+			effect = "Distortion",
 		},
 	},
 	["SPEEDSTER"] = {
@@ -84,7 +84,7 @@ local MutationDatabase: { [string]: MutationData } = {
 		name = "RAGDOLL MASTER",
 		rarity = "Rare",
 		chance = 0.25,
-		color = Color3.fromRGB(11, 198, 227),
+		color = Color3.fromRGB(107, 91, 149),
 		duration = 15,
 		vfx = {
 			type = "glow",
@@ -120,7 +120,7 @@ local MutationDatabase: { [string]: MutationData } = {
 		name = "MEME VIRUS",
 		rarity = "Epic",
 		chance = 0.15,
-		color = Color3.fromRGB(157, 78, 221),
+		color = Color3.fromRGB(255, 20, 147),
 		duration = 15,
 		vfx = {
 			type = "glitch",
@@ -192,17 +192,17 @@ local MutationDatabase: { [string]: MutationData } = {
 		name = "GALAXY GOD",
 		rarity = "Secret",
 		chance = 0.02,
-		color = Color3.fromRGB(147, 112, 219),
+		color = Color3.fromRGB(75, 0, 130),
 		duration = 15,
 		vfx = {
 			type = "cosmic",
 			intensity = "chaos",
-			description = "Stars, nebula particles, cosmic background, floating",
+			description = "Cosmic starfield, orbiting planets, purple galaxy trail",
 		},
-		sfx = "rbxassetid://[CHOIR_SOUND]",
+		sfx = "rbxassetid://[COSMIC_SOUND]",
 		gameplay = {
 			type = "ultimate",
-			effect = "All abilities active, ×3 stats, enemies flee",
+			effect = "Gravity manipulation and flight",
 		},
 	},
 }
