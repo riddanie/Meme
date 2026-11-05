@@ -6,14 +6,18 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RemoteEvents = {
 	-- Server → Client broadcasts
-	MutationApplied = nil :: RemoteEvent?,
-	ArenaTimerTick = nil :: RemoteEvent?,
-	PlayerDeath = nil :: RemoteEvent?,
+	MutationApplied = nil :: RemoteEvent?, -- Payload: { mutationId, rarity, duration }
+	ArenaTimerTick = nil :: RemoteEvent?, -- Payload: { timeRemaining, isOvertime }
+	PlayerDeath = nil :: RemoteEvent?, -- Payload: { killerId, mutationUsed, rewards: { dna, placement } }
+	MutationBroadcast = nil :: RemoteEvent?, -- Payload: { playerId, mutation, rarity }
+	PlayerEliminated = nil :: RemoteEvent?, -- Payload: { eliminatedId, killerId, placement }
 	CosmeticEquipped = nil :: RemoteEvent?,
 	
 	-- Client → Server requests
 	SpinMutation = nil :: RemoteEvent?,
 	EquipCosmetic = nil :: RemoteEvent?,
+	RequestRespawn = nil :: RemoteEvent?,
+	RequestSpectate = nil :: RemoteEvent?,
 }
 
 function RemoteEvents.CreateEvents()
