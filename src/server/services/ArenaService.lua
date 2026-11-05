@@ -45,6 +45,37 @@ function ArenaService:StartMatch()
 
 	print("[ArenaService] Match started - 90 seconds")
 
+	-- Load HazardService
+	local HazardService = nil
+	local src = game.ServerScriptService:FindFirstChild("src")
+	if src then
+		local server = src:FindFirstChild("server")
+		if server then
+			local services = server:FindFirstChild("services")
+			if services then
+				local hs = services:FindFirstChild("HazardService")
+				if hs then
+					HazardService = require(hs)
+				end
+			end
+		end
+	end
+
+	-- Spawn first hazard immediately
+	if HazardService then
+		HazardService:CycleHazards()
+	end
+
+	-- Cycle hazards every 30 seconds
+	self._hazardConnection = task.spawn(function()
+		while self._matchActive do
+			task.wait(30)
+			if self._matchActive and HazardService then
+				HazardService:CycleHazards()
+			end
+		end
+	end)
+
 	-- Start timer loop
 	self._timerConnection = RunService.Heartbeat:Connect(function(dt)
 		self._timeRemaining = self._timeRemaining - dt

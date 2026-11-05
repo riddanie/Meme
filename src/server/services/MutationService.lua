@@ -54,6 +54,26 @@ function MutationService:GenerateMutation(player: Player, pityCounter: number)
 
 	print("[MutationService] Generated mutation for", player.Name, "-", mutation.id, "(", mutation.rarity, ")")
 
+	-- Apply ragdoll to player
+	local RagdollService = nil
+	local src = game.ServerScriptService:FindFirstChild("src")
+	if src then
+		local server = src:FindFirstChild("server")
+		if server then
+			local services = server:FindFirstChild("services")
+			if services then
+				local rs = services:FindFirstChild("RagdollService")
+				if rs then
+					RagdollService = require(rs)
+				end
+			end
+		end
+	end
+
+	if RagdollService then
+		RagdollService:ApplyMutation(player, mutation.id)
+	end
+
 	return {
 		mutationId = mutation.id,
 		rarity = mutation.rarity,
