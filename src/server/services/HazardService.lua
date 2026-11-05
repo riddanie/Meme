@@ -371,4 +371,35 @@ end
 
 print("[HazardService] Module loaded")
 
+-- Check for void/fall death
+function HazardService:CheckFallDamage(player: Player)
+	local character = player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		local hrp = character.HumanoidRootPart
+		-- Kill plane at Y = -50
+		if hrp.Position.Y < -50 then
+			print("[HazardService] Player fell into void:", player.Name)
+			return true -- Player died from fall
+		end
+	end
+	return false
+end
+
+-- Grant spawn protection (forcefield)
+function HazardService:GrantSpawnProtection(player: Player, duration: number)
+	local character = player.Character
+	if character then
+		local ff = Instance.new("ForceField")
+		ff.Name = "SpawnProtection"
+		ff.Visible = false
+		ff.Parent = character
+		task.delay(duration, function()
+			if ff and ff.Parent then
+				ff:Destroy()
+			end
+		end)
+		print("[HazardService] Spawn protection granted to", player.Name, "for", duration, "seconds")
+	end
+end
+
 return HazardService
