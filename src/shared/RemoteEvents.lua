@@ -13,6 +13,7 @@ local RemoteEvents = {
 	PlayerEliminated = nil :: RemoteEvent?, -- Payload: { eliminatedId, killerId, placement }
 	CosmeticEquipped = nil :: RemoteEvent?,
 	UpdateBalance = nil :: RemoteEvent?, -- Payload: { balance: number }
+	UpdateHUD = nil :: RemoteEvent?, -- Payload: { dna: number, health: number, playerCount: number }
 	
 	-- Client → Server requests
 	SpinMutation = nil :: RemoteEvent?,

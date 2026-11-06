@@ -15,6 +15,7 @@ HazardService._currentHazard = "tsunami"
 HazardService._playerSpawnTimes = {} -- [player.UserId] = tick()
 HazardService._playerDeathTimes = {} -- [player.UserId] = tick()
 HazardService._respawnTime = 15 -- seconds
+HazardService._lastDamageLogTimes = {} -- [player.UserId] = tick() for rate-limiting logs
 
 -- Hazard damage zones (for collision detection)
 local DamageZones = {}
@@ -28,6 +29,15 @@ function HazardService:CheckHazardDamage(player: Player, damage: number, hazardT
 	
 	-- Apply damage
 	humanoid:TakeDamage(damage)
+	
+	-- Directive 3: Rate-limit damage log spam (1 log per player per 2s)
+	local userId = player.UserId
+	local now = tick()
+	local lastLog = self._lastDamageLogTimes[userId] or 0
+	if now - lastLog >= 2 then
+		print("[HazardService] Player took damage from", hazardType, ":", player.Name)
+		self._lastDamageLogTimes[userId] = now
+	end
 	
 	-- Check for death (ragdoll + payout)
 	if humanoid.Health <= 0 then
@@ -586,6 +596,14 @@ function HazardService:OnPlayerDeath(player: Player)
 	
 	-- Track death time for auto-respawn
 	self._playerDeathTimes[player.UserId] = tick()
+	
+	-- Directive 1: Respawn via LoadCharacter after 3 seconds
+	task.delay(3, function()
+		if player and player.Parent then
+			player:LoadCharacter()
+			print("[HazardService] Respawned", player.Name)
+		end
+	end)
 	
 	-- Calculate DNA reward using GameConfig constants
 	local survivalTime = 0

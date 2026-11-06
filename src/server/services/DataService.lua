@@ -36,6 +36,30 @@ end
 function DataService:SavePlayerData(player: Player, data: any)
 	_playerProfiles[player] = data
 	print("[DataService] Saved data for", player.Name)
+	
+	-- Directive 2: Fire UpdateHUD to client
+	local RemoteEvents = game.ReplicatedStorage:FindFirstChild("src")
+	if RemoteEvents then
+		RemoteEvents = RemoteEvents:FindFirstChild("shared")
+		if RemoteEvents then
+			RemoteEvents = RemoteEvents:FindFirstChild("RemoteEvents")
+			if RemoteEvents then
+				RemoteEvents = require(RemoteEvents)
+				local updateHUD = RemoteEvents.GetEvents and RemoteEvents.GetEvents().UpdateHUD
+				if updateHUD then
+					local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+					local health = humanoid and (humanoid.Health / humanoid.MaxHealth * 100) or 100
+					local playerCount = #Players:GetPlayers()
+					
+					updateHUD:FireClient(player, {
+						dna = data.Data.MutagenDNA or 0,
+						health = math.floor(health),
+						playerCount = playerCount
+					})
+				end
+			end
+		end
+	end
 end
 
 -- Initialize

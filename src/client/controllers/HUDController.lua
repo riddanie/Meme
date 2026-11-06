@@ -252,6 +252,24 @@ function HUDController:KnitStart()
 			-- TODO: maintain local mutation list and update it
 		end)
 	end
+	
+	-- Directive 2: Listen for UpdateHUD events
+	if RemoteEvents.UpdateHUD then
+		RemoteEvents.UpdateHUD.OnClientEvent:Connect(function(payload: any)
+			if payload.dna then
+				self:UpdateDNA(payload.dna)
+			end
+			if payload.health then
+				if statsLabels["Health"] then
+					statsLabels["Health"].Text = "Health: " .. payload.health .. "%"
+				end
+			end
+			if payload.playerCount then
+				local maxPlayers = 16
+				self:UpdatePlayerCount(payload.playerCount, maxPlayers)
+			end
+		end)
+	end
 end
 
 return HUDController
