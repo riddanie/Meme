@@ -44,10 +44,12 @@ function DeathController:CreateUI()
 		self:RetryMatch()
 	end)
 
-	local menuButton = actions:WaitForChild("LobbyButton", 5) or actions:WaitForChild("PlayAgainButton", 5)
-	menuButton.MouseButton1Click:Connect(function()
-		self:ReturnToLobby()
-	end)
+	local lobbyButton = actions:FindFirstChild("LobbyButton")
+	if lobbyButton then
+		lobbyButton.MouseButton1Click:Connect(function()
+			self:ReturnToLobby()
+		end)
+	end
 
 	self.deathFrame = screenGui
 end
