@@ -37,6 +37,7 @@ local timerLabel: TextLabel? = nil
 local dnaLabel: TextLabel? = nil
 local playersLabel: TextLabel? = nil
 local healthFill: Frame? = nil
+local healthConnection: RBXScriptConnection? = nil
 
 -- HUD layout already exists in StarterGui
 function HUDController:CreateUI()
@@ -133,6 +134,12 @@ function HUDController:KnitStart()
 
 	-- Bind health to Humanoid
 	local function bindHealth()
+		-- Disconnect old connection if exists
+		if healthConnection then
+			healthConnection:Disconnect()
+			healthConnection = nil
+		end
+		
 		if player.Character then
 			local humanoid = player.Character:FindFirstChild("Humanoid")
 			if humanoid then
@@ -140,7 +147,7 @@ function HUDController:KnitStart()
 				self:UpdateHealth(humanoid.Health, humanoid.MaxHealth)
 				
 				-- Listen for changes
-				humanoid.HealthChanged:Connect(function(health)
+				healthConnection = humanoid.HealthChanged:Connect(function(health)
 					self:UpdateHealth(health, humanoid.MaxHealth)
 				end)
 			end
@@ -150,6 +157,17 @@ function HUDController:KnitStart()
 	-- Bind on spawn and respawn
 	bindHealth()
 	player.CharacterAdded:Connect(bindHealth)
+	
+	-- Poll player count every 1s (fallback)
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			if playersLabel then
+				local aliveCount = #Players:GetPlayers()
+				self:UpdatePlayerCount(aliveCount, aliveCount)
+			end
+		end
+	end)
 
 	-- Hook RemoteEvents
 	if RemoteEvents.ArenaTimerTick then
