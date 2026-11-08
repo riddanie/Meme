@@ -1,8 +1,8 @@
-|--!strict
-|-- StoreController.lua: Handles Store UI interactions
-|--
-|local Players = game:GetService("Players")
-|local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--!strict
+-- StoreController.lua: Handles Store UI interactions
+--
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Knit
 local kn = ReplicatedStorage:FindFirstChild("Packages")
@@ -100,12 +100,12 @@ end
 function StoreController:ShowStore()
 	if storeUI then
 		storeUI.Enabled = true
-		if balanceLabel then
-			-- Trigger balance sync
-			if RemoteEvents.RequestBalance then
-				RemoteEvents.RequestBalance:FireServer()
-			end
+		-- Trigger balance sync on open
+		if RemoteEvents.RequestBalance then
+			RemoteEvents.RequestBalance:FireServer()
 		end
+	else
+		warn("[StoreController] StoreUI not found")
 	end
 end
 

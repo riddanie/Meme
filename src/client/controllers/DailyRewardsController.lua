@@ -38,6 +38,17 @@ function DailyRewardsController:CreateUI()
 			end)
 		end
 		
+		-- Bind close button
+		local header = dailyUI:FindFirstChild("Header")
+		if header then
+			local closeBtn = header:FindFirstChild("CloseButton")
+			if closeBtn then
+				closeBtn.MouseButton1Click:Connect(function()
+					self:HideUI()
+				end)
+			end
+		end
+		
 		-- Bind open button from ArenaHUD
 		local screenGui = playerGui:FindFirstChild("ArenaHUD")
 		if screenGui then
@@ -48,6 +59,8 @@ function DailyRewardsController:CreateUI()
 				end)
 			end
 		end
+	else
+		warn("[DailyRewardsController] DailyRewardsUI not found")
 	end
 end
 
@@ -70,7 +83,17 @@ function DailyRewardsController:BindEvents()
 end
 
 function DailyRewardsController:ShowUI()
-	if dailyUI then dailyUI.Enabled = true end
+	if dailyUI then
+		dailyUI.Enabled = true
+	else
+		warn("[DailyRewardsController] DailyRewardsUI not found")
+	end
+end
+
+function DailyRewardsController:HideUI()
+	if dailyUI then
+		dailyUI.Enabled = false
+	end
 end
 
 function DailyRewardsController:ClaimReward()
