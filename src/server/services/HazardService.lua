@@ -717,7 +717,4 @@ function HazardService:StartRespawnLoop()
 	end)
 end
 
--- Initialize death listeners
-HazardService:Init()
-
 return HazardService

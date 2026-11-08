@@ -38,6 +38,12 @@ end
 local ArenaService = services["ArenaService"]
 local HazardService = services["HazardService"]
 
+-- Initialize death listeners
+if HazardService and HazardService.Init then
+	HazardService:Init()
+	print("[Server] HazardService death listeners initialized")
+end
+
 -- Start respawn loop
 if HazardService and HazardService.StartRespawnLoop then
 	HazardService:StartRespawnLoop()
