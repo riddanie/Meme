@@ -13,6 +13,7 @@ ArenaService._timeRemaining = 90
 ArenaService._timerConnection = nil
 ArenaService._hazardConnection = nil
 ArenaService._mutationConnection = nil
+ArenaService._lastTimerSecond = 0
 
 -- Find shared modules
 local function getSharedFolder()
@@ -181,13 +182,17 @@ function ArenaService:StartMatch()
 	self._timerConnection = RunService.Heartbeat:Connect(function(dt)
 		self._timeRemaining = self._timeRemaining - dt
 
-		-- Broadcast timer tick to clients every second
-		local events = GetRemoteEvents()
-		if events and events.ArenaTimerTick and math.floor(self._timeRemaining) % 1 < dt then
-			events.ArenaTimerTick:FireAllClients({
-				timeRemaining = math.floor(self._timeRemaining),
-				isOvertime = false
-			})
+		-- Broadcast timer tick to clients every whole second (throttled)
+		local currentSecond = math.floor(self._timeRemaining)
+		if currentSecond ~= self._lastTimerSecond and currentSecond >= 0 then
+			local events = GetRemoteEvents()
+			if events and events.ArenaTimerTick then
+				events.ArenaTimerTick:FireAllClients({
+					timeRemaining = currentSecond,
+					isOvertime = false
+				})
+			end
+			self._lastTimerSecond = currentSecond
 		end
 
 		-- Match end

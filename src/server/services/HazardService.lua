@@ -569,12 +569,7 @@ function HazardService:SpawnPlayer(player: Player)
 		
 		-- Grant spawn protection
 		self:GrantSpawnProtection(player, 10)
-		
-		-- Wire Humanoid.Died for death payout
-		Humanoid.Died:Connect(function()
-			self:OnPlayerDeath(player)
-		end)
-	end
+		end
 end
 
 -- Handle player death + DNA payout
@@ -668,15 +663,30 @@ end
 -- Init: Wire up death listeners
 function HazardService:Init()
 	local Players = game:GetService("Players")
+	
+	-- Wire for existing players at startup
+	for _, player in ipairs(Players:GetPlayers()) do
+		self:WirePlayerDeathListener(player)
+	end
+	
+	-- Wire for future players
 	Players.PlayerAdded:Connect(function(player)
-		player.CharacterAdded:Connect(function(char)
-			local humanoid = char:WaitForChild("Humanoid")
-			humanoid.Died:Connect(function()
-				self:OnPlayerDeath(player)
-			end)
-		end)
+		self:WirePlayerDeathListener(player)
 	end)
+	
 	print("[HazardService] Death listeners wired")
+end
+
+function HazardService:WirePlayerDeathListener(player)
+	player.CharacterAdded:Connect(function(char)
+		local humanoid = char:WaitForChild("Humanoid")
+		humanoid.Died:Connect(function()
+			self:OnPlayerDeath(player)
+		end)
+		
+		-- Reset spawn time per life
+		self._playerSpawnTimes[player.UserId] = tick()
+	end)
 end
 
 -- Respawn check loop (runs every 1 second)
@@ -709,3 +719,6 @@ function HazardService:StartRespawnLoop()
 end
 
 return HazardService
+
+-- Initialize death listeners
+HazardService:Init()
