@@ -22,6 +22,13 @@ function StoreService:Init()
 		end)
 	end
 	
+	-- Handle RequestBalance
+	if RemoteEvents.RequestBalance then
+		RemoteEvents.RequestBalance.OnServerEvent:Connect(function(player)
+			self:SyncBalance(player)
+		end)
+	end
+	
 	-- Sync balance to client periodically or on request
 	Players.PlayerAdded:Connect(function(player)
 		task.wait(2)
@@ -38,11 +45,17 @@ function StoreService:SyncBalance(player: Player)
 		local profile = DataService:GetPlayerData(player)
 		if profile and profile.Data then
 			local balance = profile.Data.MutagenDNA or 0
+			local ownedCosmetics = profile.Data.OwnedCosmetics or {}
+			local equippedCosmetic = profile.Data.EquippedCosmetic or "None"
 			
 			local shared = ReplicatedStorage:FindFirstChild("src"):WaitForChild("shared")
 			local RemoteEvents = require(shared:WaitForChild("RemoteEvents"))
 			if RemoteEvents.UpdateBalance then
-				RemoteEvents.UpdateBalance:FireClient(player, balance)
+				RemoteEvents.UpdateBalance:FireClient(player, {
+					balance = balance,
+					ownedCosmetics = ownedCosmetics,
+					equippedCosmetic = equippedCosmetic
+				})
 			end
 		end
 	end

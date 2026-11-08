@@ -58,6 +58,27 @@ function HUDController:CreateUI()
 	timerLabel.Parent = screenGui
 	statsLabels["ArenaTimer"] = timerLabel
 
+	-- Store button (top right)
+	local storeButton = Instance.new("TextButton")
+	storeButton.Name = "StoreButton"
+	storeButton.Size = UDim2.new(0, 90, 0, 40)
+	storeButton.AnchorPoint = Vector2.new(1, 0)
+	storeButton.Position = UDim2.new(1, -16, 0, 76)
+	storeButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+	storeButton.BorderSizePixel = 0
+	storeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	storeButton.TextSize = 16
+	storeButton.Font = Enum.Font.GothamBold
+	storeButton.Text = "STORE"
+	storeButton.Parent = screenGui
+	storeButton.MouseButton1Click:Connect(function()
+		-- Open store (StoreController will handle)
+		local StoreController = require(script.Parent.StoreController)
+		if StoreController and StoreController.ShowStore then
+			StoreController:ShowStore()
+		end
+	end)
+
 	-- Player stats panel (left side)
 	local statsFrame = Instance.new("Frame")
 	statsFrame.Name = "StatsFrame"
@@ -239,6 +260,26 @@ end
 function HUDController:KnitStart()
 	RemoteEvents.GetEvents()
 
+	-- Bind health to Humanoid
+	local function bindHealth()
+		if player.Character then
+			local humanoid = player.Character:FindFirstChild("Humanoid")
+			if humanoid then
+				humanoid.HealthChanged:Connect(function(health)
+					local maxHealth = humanoid.MaxHealth
+					local healthPercent = math.floor((health / maxHealth) * 100)
+					if statsLabels["Health"] then
+						statsLabels["Health"].Text = "Health: " .. healthPercent .. "%"
+					end
+				end)
+			end
+		end
+	end
+	
+	-- Bind on spawn and respawn
+	bindHealth()
+	player.CharacterAdded:Connect(bindHealth)
+
 	-- Hook RemoteEvents
 	if RemoteEvents.ArenaTimerTick then
 		RemoteEvents.ArenaTimerTick.OnClientEvent:Connect(function(payload: any)
@@ -265,11 +306,6 @@ function HUDController:KnitStart()
 		RemoteEvents.UpdateHUD.OnClientEvent:Connect(function(payload: any)
 			if payload.dna then
 				self:UpdateDNA(payload.dna)
-			end
-			if payload.health then
-				if statsLabels["Health"] then
-					statsLabels["Health"].Text = "Health: " .. payload.health .. "%"
-				end
 			end
 			if payload.playerCount then
 				local maxPlayers = 16

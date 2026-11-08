@@ -499,6 +499,8 @@ local function BroadcastPlayerDeath(player: Player, killerId: number?, mutationU
 						playerId = player.UserId,
 						killerId = killerId,
 						mutationUsed = mutationUsed,
+						timeSurvived = tick() - self._playerSpawnTimes[player.UserId],
+						placement = self:CalculatePlacement(player.UserId),
 						rewards = { dna = 10, placement = 1 }
 					})
 					print("[HazardService] Broadcasted death for", player.Name)
@@ -628,12 +630,28 @@ function HazardService:OnPlayerDeath(player: Player)
 	if src2 then
 		local shared = src2:FindFirstChild("shared")
 		if shared then
-			local re = shared:FindFirstChild("RemoteEvents")
-			if re then
+			local re = require(shared:FindFirstChild("RemoteEvents"))
+			if re.PlayerEliminated then
+				local totalAlive = 0
+				for _, p in pairs(game.Players:GetPlayers()) do
+					if p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+						totalAlive += 1
+					end
+				end
+				re.PlayerEliminated:FireAllClients({
+					alive = totalAlive,
+					total = #game.Players:GetPlayers()
+				})
+			end
+			
+			if re.PlayerDeath then
 				re = require(re)
 				if re.PlayerDeath then
 					re.PlayerDeath:FireAllClients({
 						playerId = player.UserId,
+						mutationUsed = "None",
+						timeSurvived = tick() - self._playerSpawnTimes[player.UserId],
+						placement = self:CalculatePlacement(player.UserId),
 						rewards = { dna = dnaReward, placement = 1 }
 					})
 				end

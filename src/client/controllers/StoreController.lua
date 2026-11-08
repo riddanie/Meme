@@ -257,12 +257,37 @@ end
 function StoreController:ShowStore()
 	if storeFrame then
 		storeFrame.Enabled = true
+		-- Request current balance on open
+		if RemoteEvents.RequestBalance then
+			RemoteEvents.RequestBalance:FireServer()
+		end
 	end
 end
 
 function StoreController:HideStore()
 	if storeFrame then
 		storeFrame.Enabled = false
+	end
+end
+
+-- Update balance
+function StoreController:UpdateBalance(data: any)
+	if type(data) == "table" then
+		-- New format with cosmetics
+		if balanceLabel then
+			balanceLabel.Text = string.format("%d DNA", data.balance or 0)
+		end
+		playerDNA = data.balance or 0
+		
+		-- Store cosmetics data for display
+		self.ownedCosmetics = data.ownedCosmetics or {}
+		self.equippedCosmetic = data.equippedCosmetic or "None"
+	else
+		-- Legacy format (number only)
+		if balanceLabel then
+			balanceLabel.Text = string.format("%d DNA", data)
+		end
+		playerDNA = data
 	end
 end
 
@@ -274,7 +299,12 @@ end
 function StoreController:KnitStart()
 	RemoteEvents.GetEvents()
 
-	-- Listen for balance updates from server
+	-- Request initial balance
+	if RemoteEvents.RequestBalance then
+		RemoteEvents.RequestBalance:FireServer()
+	end
+
+	-- Listen for balance updates
 	if RemoteEvents.UpdateBalance then
 		RemoteEvents.UpdateBalance.OnClientEvent:Connect(function(balance: number)
 			self:UpdateBalance(balance)

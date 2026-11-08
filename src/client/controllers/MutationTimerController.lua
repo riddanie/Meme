@@ -18,6 +18,8 @@ local playerGui = player:WaitForChild("PlayerGui")
 local timerLabel: TextLabel? = nil
 local timerFrame: Frame? = nil
 local activeMutations: { [string]: { id: string, duration: number, startTime: number, isPermanent: boolean } } = {}
+local activeTweens: { [string]: Tween } = {}
+local updateConnection: RBXScriptConnection? = nil
 
 -- Color palette
 local COLOR_PERMANENT = Color3.fromRGB(255, 200, 0) -- Gold
@@ -25,6 +27,15 @@ local COLOR_NORMAL = Color3.fromRGB(11, 198, 227) -- Cyan
 local COLOR_DANGER = Color3.fromRGB(255, 50, 50) -- Red
 
 function MutationTimerController:CreateUI()
+	-- Create or get ArenaHUD ScreenGui
+	local arenaHud = playerGui:FindFirstChild("ArenaHUD")
+	if not arenaHud then
+		arenaHud = Instance.new("ScreenGui")
+		arenaHud.Name = "ArenaHUD"
+		arenaHud.DisplayOrder = 1
+		arenaHud.Parent = playerGui
+	end
+	
 	-- Timer display frame
 	timerFrame = Instance.new("Frame")
 	timerFrame.Name = "MutationTimerFrame"
@@ -34,7 +45,7 @@ function MutationTimerController:CreateUI()
 	timerFrame.BackgroundTransparency = 0.7
 	timerFrame.BorderSizePixel = 2
 	timerFrame.BorderColor3 = Color3.fromRGB(100, 100, 100)
-	timerFrame.Parent = playerGui
+	timerFrame.Parent = arenaHud
 	
 	-- Add corner radius via UICorner
 	local corner = Instance.new("UICorner")
@@ -93,6 +104,11 @@ function MutationTimerController:UpdateTimerState(remainingTime: number, isPerma
 end
 
 function MutationTimerController:PlayPulseAnimation(frame: Frame)
+	-- Cancel existing tween
+	if activeTweens["pulse"] then
+		activeTweens["pulse"]:Cancel()
+	end
+	
 	-- Pulse animation for permanent mutations
 	local tweenService = game:GetService("TweenService")
 	local tweenInfo = TweenInfo.new(
@@ -105,10 +121,16 @@ function MutationTimerController:PlayPulseAnimation(frame: Frame)
 	)
 	
 	local tween = tweenService:Create(frame, tweenInfo, { BackgroundTransparency = 0.3 })
+	activeTweens["pulse"] = tween
 	tween:Play()
 end
 
 function MutationTimerController:PlayFlashAnimation(frame: Frame, interval: number)
+	-- Cancel existing tween
+	if activeTweens["flash"] then
+		activeTweens["flash"]:Cancel()
+	end
+	
 	-- Red flashing for danger state
 	local tweenService = game:GetService("TweenService")
 	local tweenInfo = TweenInfo.new(
@@ -120,12 +142,16 @@ function MutationTimerController:PlayFlashAnimation(frame: Frame, interval: numb
 	)
 	
 	local tween = tweenService:Create(frame, tweenInfo, { BorderColor3 = COLOR_DANGER })
+	activeTweens["flash"] = tween
 	tween:Play()
 end
 
 function MutationTimerController:UpdateMutationTimer()
-	-- Tick every 0.1 seconds to update remaining time
-	local updateConnection
+	-- Single Heartbeat connection
+	if updateConnection then
+		return -- Already running
+	end
+	
 	updateConnection = game:GetService("RunService").Heartbeat:Connect(function(dt)
 		local currentTime = tick()
 		local totalRemaining = 0
@@ -151,6 +177,13 @@ function MutationTimerController:UpdateMutationTimer()
 		-- Stop when no active mutations
 		if totalRemaining <= 0 and not isPermanent then
 			updateConnection:Disconnect()
+			updateConnection = nil
+			
+			-- Cancel active tweens
+			for name, tween in pairs(activeTweens) do
+				tween:Cancel()
+			end
+			activeTweens = {}
 		end
 	end)
 end
@@ -188,8 +221,8 @@ function MutationTimerController:KnitStart()
 	RemoteEvents.GetEvents()
 	
 	-- Listen for mutation applications
-	if RemoteEvents.MutationApplied then
-		RemoteEvents.MutationApplied.OnClientEvent:Connect(function(payload: any)
+	if RemoteEvents.MutationBroadcast then
+		RemoteEvents.MutationBroadcast.OnClientEvent:Connect(function(payload: any)
 			self:HandleMutationApplied(payload)
 		end)
 	end

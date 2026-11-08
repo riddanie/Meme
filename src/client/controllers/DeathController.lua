@@ -184,7 +184,7 @@ function DeathController:CreateUI()
 	retryButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	retryButton.TextSize = 16
 	retryButton.Font = Enum.Font.GothamBold
-	retryButton.Text = "RETRY MATCH (COST: 100 DNA)"
+	retryButton.Text = "RESPAWN"
 	retryButton.Parent = deathFrame
 	retryButton.MouseButton1Click:Connect(function()
 		self:RetryMatch()
@@ -272,10 +272,18 @@ end
 function DeathController:KnitStart()
 	RemoteEvents.GetEvents()
 
+	-- Hide death screen on respawn
+	player.CharacterAdded:Connect(function()
+		self:HideDeathScreen()
+	end)
+
 	-- Hook PlayerDeath event
 	if RemoteEvents.PlayerDeath then
 		RemoteEvents.PlayerDeath.OnClientEvent:Connect(function(payload: any)
-			self:ShowDeathScreen(payload.mutationUsed or "Unknown", payload.rewards or {})
+			-- Only show death screen for local player
+			if payload.playerId == player.UserId then
+				self:ShowDeathScreen(payload.mutationUsed or "Unknown", payload.rewards or {})
+			end
 		end)
 	end
 end

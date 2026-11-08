@@ -182,8 +182,8 @@ function MutationUIController:KnitStart()
 		end)
 	end
 
-	if RemoteEvents.MutationApplied then
-		RemoteEvents.MutationApplied.OnClientEvent:Connect(function(payload: any)
+	if RemoteEvents.MutationBroadcast then
+		RemoteEvents.MutationBroadcast.OnClientEvent:Connect(function(payload: any)
 			self:ShowMutation(payload.mutationId, payload.rarity)
 		end)
 	end
