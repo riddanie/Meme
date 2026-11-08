@@ -14,6 +14,22 @@ ArenaService._timerConnection = nil
 ArenaService._hazardConnection = nil
 ArenaService._mutationConnection = nil
 
+-- Get RemoteEvents
+local RemoteEvents = nil
+local function GetRemoteEvents()
+	if not RemoteEvents then
+		local sharedFolder = getSharedFolder()
+		if sharedFolder then
+			local remoteEventsModule = sharedFolder:FindFirstChild("RemoteEvents")
+			if remoteEventsModule then
+				RemoteEvents = require(remoteEventsModule)
+				RemoteEvents.GetEvents()
+			end
+		end
+	end
+	return RemoteEvents
+end
+
 -- Find shared modules
 local function getSharedFolder()
 	local src = ReplicatedStorage:FindFirstChild("src")
@@ -164,6 +180,15 @@ function ArenaService:StartMatch()
 	-- Start timer loop
 	self._timerConnection = RunService.Heartbeat:Connect(function(dt)
 		self._timeRemaining = self._timeRemaining - dt
+
+		-- Broadcast timer tick to clients every second
+		local events = GetRemoteEvents()
+		if events and events.ArenaTimerTick and math.floor(self._timeRemaining) % 1 < dt then
+			events.ArenaTimerTick:FireAllClients({
+				timeRemaining = math.floor(self._timeRemaining),
+				isOvertime = false
+			})
+		end
 
 		-- Match end
 		if self._timeRemaining <= 0 then

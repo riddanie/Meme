@@ -325,11 +325,15 @@ function HazardService:SpawnGravityVortex()
 					end
 					
 					-- Damage based on zone
+					local damage = 0
 					if dist < vortex.coreRadius then
-						print("[HazardService] Vortex core damage:", player.Name, vortex.coreDamage)
+						damage = vortex.coreDamage
 					else
-						print("[HazardService] Vortex outer damage:", player.Name, vortex.outerDamage)
+						damage = vortex.outerDamage
 					end
+				
+					-- Rate-limited damage via CheckHazardDamage
+					self:CheckHazardDamage(player, damage, "vortex")
 				end
 			end
 		end
@@ -659,6 +663,20 @@ function HazardService:GrantSpawnProtection(player: Player, duration: number)
 		end)
 		print("[HazardService] Spawn protection granted to", player.Name, "for", duration, "seconds")
 	end
+end
+
+-- Init: Wire up death listeners
+function HazardService:Init()
+	local Players = game:GetService("Players")
+	Players.PlayerAdded:Connect(function(player)
+		player.CharacterAdded:Connect(function(char)
+			local humanoid = char:WaitForChild("Humanoid")
+			humanoid.Died:Connect(function()
+				self:OnPlayerDeath(player)
+			end)
+		end)
+	end)
+	print("[HazardService] Death listeners wired")
 end
 
 -- Respawn check loop (runs every 1 second)
