@@ -28,6 +28,13 @@ local StoreController = Knit.CreateController {
 	Name = "StoreController",
 }
 
+-- Helper: Brighten color
+local function brighten(color: Color3, amount: number): Color3
+	local h, s, v = color:ToHSV()
+	v = math.clamp(v + amount, 0, 1)
+	return Color3.fromHSV(h, s, v)
+end
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local storeUI: ScreenGui? = nil
@@ -130,6 +137,23 @@ function StoreController:PopulateItems()
 		itemCard.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 		itemCard.Parent = itemsFrame
 		
+		-- Add UIStroke for card hover effect
+		local cardStroke = Instance.new("UIStroke")
+		cardStroke.Color = Color3.fromRGB(60, 60, 60)
+		cardStroke.Thickness = 1
+		cardStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		cardStroke.Parent = itemCard
+		
+		-- Card hover effect (cyan border)
+		itemCard.MouseEnter:Connect(function()
+			cardStroke.Color = Color3.fromRGB(11, 198, 227) -- #0BC6E3
+			cardStroke.Thickness = 2
+		end)
+		itemCard.MouseLeave:Connect(function()
+			cardStroke.Color = Color3.fromRGB(60, 60, 60)
+			cardStroke.Thickness = 1
+		end)
+		
 		local nameLabel = Instance.new("TextLabel")
 		nameLabel.Name = "NameLabel"
 		nameLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -159,6 +183,26 @@ function StoreController:PopulateItems()
 		buyButton.TextSize = 10
 		buyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 		buyButton.Parent = itemCard
+		
+		-- Store original button properties for hover animation
+		local originalSize = buyButton.Size
+		local originalColor = buyButton.BackgroundColor3
+		
+		-- Button hover/pressed animations
+		buyButton.MouseEnter:Connect(function()
+			buyButton.Size = UDim2.new(
+				originalSize.X.Scale,
+				originalSize.X.Offset,
+				originalSize.Y.Scale,
+				originalSize.Y.Offset + 2
+			)
+			buyButton.BackgroundColor3 = brighten(originalColor, 0.15)
+		end)
+		
+		buyButton.MouseLeave:Connect(function()
+			buyButton.Size = originalSize
+			buyButton.BackgroundColor3 = originalColor
+		end)
 		
 		buyButton.MouseButton1Click:Connect(function()
 			self:PurchaseCosmetic(cosmetic.id)

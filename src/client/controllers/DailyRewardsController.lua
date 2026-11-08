@@ -82,6 +82,30 @@ function DailyRewardsController:BindEvents()
 				if claimButton then
 					claimButton.Visible = false
 				end
+				
+				-- Day 7 pulse animation for CLAIM NOW badge
+				local badgeContainer = dailyUI:FindFirstChild("BadgeContainer", true)
+				if badgeContainer then
+					for _, child in ipairs(badgeContainer:GetChildren()) do
+						if child:IsA("TextLabel") and child.Text == "CLAIM NOW" then
+							local TweenService = game:GetService("TweenService")
+							local stroke = child:FindFirstChildOfClass("UIStroke")
+							if not stroke then
+								stroke = Instance.new("UIStroke")
+								stroke.Color = Color3.fromRGB(11, 198, 227)
+								stroke.Thickness = 2
+								stroke.Parent = child
+							end
+							
+							local tween = TweenService:Create(
+								stroke,
+								TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1),
+								{Transparency = 0.5}
+							)
+							tween:Play()
+						end
+					end
+				end
 			else
 				warn("[DailyRewardsController] Claim failed:", payload.reason)
 			end
