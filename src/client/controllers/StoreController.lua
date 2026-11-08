@@ -22,135 +22,41 @@ local playerDNA: number = 0
 
 -- Create store UI
 function StoreController:CreateUI()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "StoreUI"
+	local screenGui = playerGui:WaitForChild("StoreUI")
 	screenGui.DisplayOrder = 50
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Enabled = false -- Hidden by default
-	screenGui.Parent = playerGui
 
 	-- Main container
-	local container = Instance.new("Frame")
-	container.Name = "Container"
-	container.AnchorPoint = Vector2.new(0.5, 0.5)
-	container.Size = UDim2.new(0, 382, 0.92, 0)
-	container.Position = UDim2.new(0.5, 0, 0.5, 0)
-	container.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
-	container.BackgroundTransparency = 0.2
-	container.BorderSizePixel = 0
-	container.Parent = screenGui
-
-	local sizeConstraint = Instance.new("UISizeConstraint")
-	sizeConstraint.MaxSize = Vector2.new(382, 640)
-	sizeConstraint.Parent = container
+	local container = screenGui:WaitForChild("Container")
 
 	-- Header
-	local header = Instance.new("Frame")
-	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, 60)
-	header.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-	header.BackgroundTransparency = 0.3
-	header.BorderSizePixel = 0
-	header.Parent = container
-
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Size = UDim2.new(1, -40, 1, 0)
-	title.BackgroundTransparency = 1
-	title.TextColor3 = Color3.fromRGB(255, 56, 100)
-	title.TextSize = 24
-	title.Font = Enum.Font.GothamBold
-	title.Text = "STORE"
-	title.Parent = header
-
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 32, 0, 32)
-	closeButton.Position = UDim2.new(1, -40, 0, 6)
-	closeButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
-	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeButton.TextSize = 20
-	closeButton.Font = Enum.Font.GothamBold
-	closeButton.Text = "X"
-	closeButton.Parent = header
+	local header = container:WaitForChild("Header")
+	local title = header:WaitForChild("Title")
+	local closeButton = header:WaitForChild("CloseButton")
 	closeButton.MouseButton1Click:Connect(function()
 		self:HideStore()
 	end)
 
 	-- Balance display
-	local balanceFrame = Instance.new("Frame")
-	balanceFrame.Name = "BalanceFrame"
-	balanceFrame.Size = UDim2.new(1, -32, 0, 80)
-	balanceFrame.Position = UDim2.new(0, 16, 0, 70)
-	balanceFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-	balanceFrame.BackgroundTransparency = 0.3
-	balanceFrame.BorderSizePixel = 0
-	balanceFrame.Parent = container
-
-	balanceLabel = Instance.new("TextLabel")
-	balanceLabel.Name = "BalanceLabel"
-	balanceLabel.Size = UDim2.new(1, 0, 0, 50)
-	balanceLabel.Position = UDim2.new(0, 0, 0, 15)
-	balanceLabel.BackgroundTransparency = 1
-	balanceLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-	balanceLabel.TextSize = 32
-	balanceLabel.Font = Enum.Font.GothamBold
-	balanceLabel.Text = "2,150 DNA"
-	balanceLabel.Parent = balanceFrame
+	local balanceFrame = container:WaitForChild("BalanceFrame")
+	balanceLabel = balanceFrame:WaitForChild("BalanceLabel")
 
 	-- Products list (scrolling frame)
-	local scrollingFrame = Instance.new("ScrollingFrame")
-	scrollingFrame.Name = "ProductsList"
-	scrollingFrame.Size = UDim2.new(1, -32, 1, -176)
-	scrollingFrame.Position = UDim2.new(0, 16, 0, 108)
-	scrollingFrame.BackgroundTransparency = 1
-	scrollingFrame.ScrollBarThickness = 4
-	scrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	scrollingFrame.Parent = container
+	local scrollingFrame = container:WaitForChild("ProductsList")
 
-	local uiPadding = Instance.new("UIPadding")
-	uiPadding.PaddingRight = UDim.new(0, 8)
-	uiPadding.Parent = scrollingFrame
-
-	local uiListLayout = Instance.new("UIListLayout")
-	uiListLayout.Padding = UDim.new(0, 8)
-	uiListLayout.Parent = scrollingFrame
-
-	-- Populate products
+	-- Populate products using template
 	self:PopulateProducts(scrollingFrame)
 
 	-- Action buttons
-	local buttonFrame = Instance.new("Frame")
-	buttonFrame.Name = "ButtonFrame"
-	buttonFrame.Size = UDim2.new(1, -32, 0, 110)
-	buttonFrame.Position = UDim2.new(0, 16, 1, -126)
-	buttonFrame.BackgroundTransparency = 1
-	buttonFrame.Parent = container
-
-	local purchaseButton = Instance.new("TextButton")
-	purchaseButton.Name = "PurchaseButton"
-	purchaseButton.Size = UDim2.new(1, 0, 0, 50)
-	purchaseButton.BackgroundColor3 = Color3.fromRGB(255, 56, 100)
-	purchaseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	purchaseButton.TextSize = 16
-	purchaseButton.Font = Enum.Font.GothamBold
-	purchaseButton.Text = "PURCHASE SELECTED"
-	purchaseButton.Parent = buttonFrame
+	local buttonFrame = container:WaitForChild("ButtonFrame")
+	local purchaseButton = buttonFrame:WaitForChild("PurchaseButton")
 	purchaseButton.MouseButton1Click:Connect(function()
 		self:PurchaseSelected()
 	end)
 
-	local previewButton = Instance.new("TextButton")
-	previewButton.Name = "PreviewButton"
-	previewButton.Size = UDim2.new(1, 0, 0, 50)
-	previewButton.Position = UDim2.new(0, 0, 0, 60)
-	previewButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
-	previewButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	previewButton.TextSize = 16
-	previewButton.Font = Enum.Font.GothamBold
-	previewButton.Text = "PREVIEW COSMETIC"
-	previewButton.Parent = buttonFrame
+	local previewButton = buttonFrame:WaitForChild("PreviewButton")
 	previewButton.MouseButton1Click:Connect(function()
 		self:PreviewCosmetic()
 	end)
@@ -158,44 +64,60 @@ function StoreController:CreateUI()
 	storeFrame = screenGui
 end
 
--- Populate products from database
-function StoreController:PopulateProducts(container: Instance)
+-- Populate products from database using template
+function StoreController:PopulateProducts(container: ScrollingFrame)
 	local cosmetics = CosmeticDatabase.GetAllCosmetics()
+	local template = container:FindFirstChild("ProductCard")
 
 	for _, cosmetic in ipairs(cosmetics) do
-		local itemFrame = Instance.new("Frame")
+		local itemFrame: GuiObject
+		if template then
+			itemFrame = template:Clone()
+			itemFrame.Visible = true
+		else
+			itemFrame = Instance.new("Frame")
+			itemFrame.Size = UDim2.new(1, 0, 0, 60)
+			itemFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
+			itemFrame.BackgroundTransparency = 0.5
+			itemFrame.BorderSizePixel = 0
+		end
+		
 		itemFrame.Name = cosmetic.id
-		itemFrame.Size = UDim2.new(1, 0, 0, 60)
-		itemFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
-		itemFrame.BackgroundTransparency = 0.5
-		itemFrame.BorderSizePixel = 0
 		itemFrame.Parent = container
 
-		local nameLabel = Instance.new("TextLabel")
-		nameLabel.Name = "Name"
-		nameLabel.Size = UDim2.new(0.6, 0, 0, 30)
-		nameLabel.Position = UDim2.new(0, 8, 0, 8)
-		nameLabel.BackgroundTransparency = 1
-		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-		nameLabel.TextSize = 14
-		nameLabel.Font = Enum.Font.GothamBold
-		nameLabel.Text = cosmetic.name
-		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-		nameLabel.Parent = itemFrame
+		local nameLabel = itemFrame:FindFirstChild("Name") :: TextLabel?
+		if nameLabel then
+			nameLabel.Text = cosmetic.name
+		end
 
-		local descLabel = Instance.new("TextLabel")
-		descLabel.Name = "Desc"
-		descLabel.Size = UDim2.new(0.6, 0, 0, 20)
-		descLabel.Position = UDim2.new(0, 8, 0, 35)
-		descLabel.BackgroundTransparency = 1
-		descLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
-		descLabel.TextSize = 12
-		descLabel.Font = Enum.Font.Gotham
-		descLabel.Text = cosmetic.description
-		descLabel.TextXAlignment = Enum.TextXAlignment.Left
-		descLabel.Parent = itemFrame
+		local descLabel = itemFrame:FindFirstChild("Desc") :: TextLabel?
+		if descLabel then
+			descLabel.Text = cosmetic.description
+		end
 
-		local priceLabel = Instance.new("TextLabel")
+		local priceLabel = itemFrame:FindFirstChild("Price") :: TextLabel?
+		if priceLabel then
+			priceLabel.Text = cosmetic.price .. " DNA"
+		end
+
+		local selectButton = itemFrame:FindFirstChild("SelectButton") :: TextButton?
+		if selectButton then
+			selectButton.MouseButton1Click:Connect(function()
+				self:SelectCosmetic(cosmetic.id, itemFrame)
+			end)
+		else
+			itemFrame.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					self:SelectCosmetic(cosmetic.id, itemFrame)
+				end
+			end)
+		end
+	end
+	
+	if template then
+		template.Visible = false -- Hide template
+	end
+end
 		priceLabel.Name = "Price"
 		priceLabel.Size = UDim2.new(0.35, 0, 0, 40)
 		priceLabel.Position = UDim2.new(0.65, 0, 0, 10)

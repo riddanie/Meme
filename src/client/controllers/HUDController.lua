@@ -36,42 +36,19 @@ local hudFrame: ScreenGui? = nil
 local statsLabels: { [string]: TextLabel } = {}
 local playerCountLabel: TextLabel? = nil
 
--- Create HUD layout
+-- HUD layout already exists in StarterGui
 function HUDController:CreateUI()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "ArenaHUD"
+	local screenGui = playerGui:WaitForChild("ArenaHUD")
 	screenGui.DisplayOrder = 1
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	screenGui.Parent = playerGui
 
 	-- Arena timer (top center)
-	local timerLabel = Instance.new("TextLabel")
-	timerLabel.Name = "ArenaTimer"
-	timerLabel.Size = UDim2.new(0, 150, 0, 60)
-	timerLabel.Position = UDim2.new(0.5, -75, 0, 44)
-	timerLabel.BackgroundTransparency = 0.8
-	timerLabel.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
-	timerLabel.TextColor3 = Color3.fromRGB(11, 198, 227)
-	timerLabel.TextSize = 36
-	timerLabel.Font = Enum.Font.GothamBold
-	timerLabel.Text = "01:30"
-	timerLabel.Parent = screenGui
+	local timerLabel = screenGui:WaitForChild("ArenaTimer")
 	statsLabels["ArenaTimer"] = timerLabel
 
 	-- Store button (top right)
-	local storeButton = Instance.new("TextButton")
-	storeButton.Name = "StoreButton"
-	storeButton.Size = UDim2.new(0, 90, 0, 40)
-	storeButton.AnchorPoint = Vector2.new(1, 0)
-	storeButton.Position = UDim2.new(1, -16, 0, 76)
-	storeButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-	storeButton.BorderSizePixel = 0
-	storeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	storeButton.TextSize = 16
-	storeButton.Font = Enum.Font.GothamBold
-	storeButton.Text = "STORE"
-	storeButton.Parent = screenGui
+	local storeButton = screenGui:WaitForChild("StoreButton")
 	storeButton.MouseButton1Click:Connect(function()
 		-- Open store (StoreController will handle)
 		local StoreController = require(script.Parent.StoreController)
@@ -81,98 +58,27 @@ function HUDController:CreateUI()
 	end)
 
 	-- Player stats panel (left side)
-	local statsFrame = Instance.new("Frame")
-	statsFrame.Name = "StatsFrame"
-	statsFrame.Size = UDim2.new(0, 150, 0, 120)
-	statsFrame.Position = UDim2.new(0, 16, 0, 120)
-	statsFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-	statsFrame.BackgroundTransparency = 0.2
-	statsFrame.BorderSizePixel = 0
-	statsFrame.Parent = screenGui
+	local statsFrame = screenGui:WaitForChild("StatsFrame")
 
 	-- Health stat
-	local healthLabel = Instance.new("TextLabel")
-	healthLabel.Name = "HealthLabel"
-	healthLabel.Size = UDim2.new(1, -20, 0, 36)
-	healthLabel.Position = UDim2.new(0, 10, 0, 6)
-	healthLabel.BackgroundTransparency = 1
-	healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	healthLabel.TextSize = 14
-	healthLabel.Font = Enum.Font.Gotham
-	healthLabel.Text = "Health: 100%"
-	healthLabel.TextXAlignment = Enum.TextXAlignment.Left
-	healthLabel.Parent = statsFrame
+	local healthLabel = statsFrame:WaitForChild("HealthLabel")
 	statsLabels["Health"] = healthLabel
 
 	-- Shield stat
-	local shieldLabel = Instance.new("TextLabel")
-	shieldLabel.Name = "ShieldLabel"
-	shieldLabel.Size = UDim2.new(1, -20, 0, 36)
-	shieldLabel.Position = UDim2.new(0, 10, 0, 42)
-	shieldLabel.BackgroundTransparency = 1
-	shieldLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	shieldLabel.TextSize = 14
-	shieldLabel.Font = Enum.Font.Gotham
-	shieldLabel.Text = "Shield: 25%"
-	shieldLabel.TextXAlignment = Enum.TextXAlignment.Left
-	shieldLabel.Parent = statsFrame
+	local shieldLabel = statsFrame:WaitForChild("ShieldLabel")
 	statsLabels["Shield"] = shieldLabel
 
 	-- DNA collected
-	local dnaLabel = Instance.new("TextLabel")
-	dnaLabel.Name = "DNALabel"
-	dnaLabel.Size = UDim2.new(1, -20, 0, 36)
-	dnaLabel.Position = UDim2.new(0, 10, 0, 78)
-	dnaLabel.BackgroundTransparency = 1
-	dnaLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-	dnaLabel.TextSize = 14
-	dnaLabel.Font = Enum.Font.GothamBold
-	dnaLabel.Text = "DNA: 0"
-	dnaLabel.TextXAlignment = Enum.TextXAlignment.Left
-	dnaLabel.Parent = statsFrame
+	local dnaLabel = statsFrame:WaitForChild("DNALabel")
 	statsLabels["DNA"] = dnaLabel
 
 	-- Player count panel
-	local playerCountFrame = Instance.new("Frame")
-	playerCountFrame.Name = "PlayerCountFrame"
-	playerCountFrame.Size = UDim2.new(0, 150, 0, 84)
-	playerCountFrame.Position = UDim2.new(1, -166, 0, 120)
-	playerCountFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-	playerCountFrame.BackgroundTransparency = 0.2
-	playerCountFrame.BorderSizePixel = 0
-	playerCountFrame.Parent = screenGui
-
-	local playerCountTitle = Instance.new("TextLabel")
-	playerCountTitle.Name = "Title"
-	playerCountTitle.Size = UDim2.new(1, -20, 0, 24)
-	playerCountTitle.Position = UDim2.new(0, 10, 0, 6)
-	playerCountTitle.BackgroundTransparency = 1
-	playerCountTitle.TextColor3 = Color3.fromRGB(11, 198, 227)
-	playerCountTitle.TextSize = 14
-	playerCountTitle.Font = Enum.Font.GothamBold
-	playerCountTitle.Text = "Players Alive"
-	playerCountTitle.TextXAlignment = Enum.TextXAlignment.Left
-	playerCountTitle.Parent = playerCountFrame
-
-	playerCountLabel = Instance.new("TextLabel")
-	playerCountLabel.Name = "PlayerCount"
-	playerCountLabel.Size = UDim2.new(1, -20, 0, 42)
-	playerCountLabel.Position = UDim2.new(0, 10, 0, 36)
-	playerCountLabel.BackgroundTransparency = 1
-	playerCountLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-	playerCountLabel.TextSize = 22
-	playerCountLabel.Font = Enum.Font.GothamBold
-	playerCountLabel.Text = "16 / 16"
-	playerCountLabel.TextXAlignment = Enum.TextXAlignment.Left
-	playerCountLabel.Parent = playerCountFrame
+	local playerCountFrame = screenGui:WaitForChild("PlayerCountFrame")
+	playerCountLabel = playerCountFrame:WaitForChild("PlayerCount")
 	statsLabels["PlayerCount"] = playerCountLabel
 
 	-- Active mutations list (bottom)
-	local mutationsFrame = Instance.new("Frame")
-	mutationsFrame.Name = "MutationsFrame"
-	mutationsFrame.Size = UDim2.new(0, 300, 0, 120)
-	mutationsFrame.Position = UDim2.new(0.5, -150, 1, -150)
-	mutationsFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+	local mutationsFrame = screenGui:WaitForChild("MutationsFrame")
 	mutationsFrame.BackgroundTransparency = 0.2
 	mutationsFrame.BorderSizePixel = 0
 	mutationsFrame.Parent = screenGui
