@@ -26,11 +26,11 @@ local streakLabel: TextLabel? = nil
 local claimButton: TextButton? = nil
 
 function DailyRewardsController:CreateUI()
-	dailyUI = playerGui:FindFirstChild("DailyRewardsUI")
+	dailyUI = playerGui:FindFirstChild("DailyRewardsUI", true)
 	if dailyUI then
 		dailyUI.Enabled = false
-		streakLabel = dailyUI:FindFirstChild("StreakLabel")
-		claimButton = dailyUI:FindFirstChild("ClaimButton")
+		streakLabel = dailyUI:FindFirstChild("StreakLabel", true)
+		claimButton = dailyUI:FindFirstChild("ClaimButton", true)
 		
 		if claimButton then
 			claimButton.MouseButton1Click:Connect(function()
@@ -39,9 +39,9 @@ function DailyRewardsController:CreateUI()
 		end
 		
 		-- Bind close button
-		local header = dailyUI:FindFirstChild("Header")
+		local header = dailyUI:FindFirstChild("Header", true)
 		if header then
-			local closeBtn = header:FindFirstChild("CloseButton")
+			local closeBtn = header:FindFirstChild("CloseButton", true)
 			if closeBtn then
 				closeBtn.MouseButton1Click:Connect(function()
 					self:HideUI()
@@ -50,9 +50,9 @@ function DailyRewardsController:CreateUI()
 		end
 		
 		-- Bind open button from ArenaHUD
-		local screenGui = playerGui:FindFirstChild("ArenaHUD")
+		local screenGui = playerGui:FindFirstChild("ArenaHUD", true)
 		if screenGui then
-			local openBtn = screenGui:FindFirstChild("DailyButton")
+			local openBtn = screenGui:FindFirstChild("DailyButton", true)
 			if openBtn then
 				openBtn.MouseButton1Click:Connect(function()
 					self:ShowUI()
@@ -70,7 +70,7 @@ function DailyRewardsController:BindEvents()
 			if payload.success then
 				print("[DailyRewardsController] Claimed! Streak:", payload.streak)
 				if streakLabel then
-					streakLabel.Text = "Streak: " .. tostring(payload.streak)
+					streakLabel.Text = "Day " .. tostring(payload.streak) .. " / 7"
 				end
 				if claimButton then
 					claimButton.Visible = false

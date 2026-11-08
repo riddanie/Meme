@@ -15,9 +15,9 @@ function StoreService:Init()
 	local shared = ReplicatedStorage:WaitForChild("src"):WaitForChild("shared")
 	local RemoteEvents = require(shared:WaitForChild("RemoteEvents"))
 	
-	-- Handle DailyRewardsClaim
-	if RemoteEvents.DailyRewardsClaim then
-		RemoteEvents.DailyRewardsClaim.OnServerEvent:Connect(function(player)
+	-- Handle ClaimDailyReward
+	if RemoteEvents.ClaimDailyReward then
+		RemoteEvents.ClaimDailyReward.OnServerEvent:Connect(function(player)
 			self:ClaimDailyReward(player)
 		end)
 	end

@@ -43,7 +43,7 @@ function StoreController:CreateUI()
 	end
 
 	-- Open button in ArenaHUD
-	openButton = screenGui:FindFirstChild("StoreButton")
+	openButton = screenGui:FindFirstChild("StoreButton", true)
 	if openButton then
 		openButton.MouseButton1Click:Connect(function()
 			self:ShowStore()
@@ -51,17 +51,17 @@ function StoreController:CreateUI()
 	end
 
 	-- Store UI (from StarterGui)
-	storeUI = playerGui:FindFirstChild("StoreUI")
+	storeUI = playerGui:FindFirstChild("StoreUI", true)
 	if storeUI then
 		storeUI.Enabled = false
-		container = storeUI:FindFirstChild("Container")
-		balanceLabel = storeUI:FindFirstChild("BalanceLabel")
-		itemsFrame = storeUI:FindFirstChild("ItemsFrame")
+		container = storeUI:FindFirstChild("Container", true)
+		balanceLabel = storeUI:FindFirstChild("BalanceLabel", true)
+		itemsFrame = storeUI:FindFirstChild("ItemsFrame", true)
 		
 		-- Bind close button
-		local header = storeUI:FindFirstChild("Header")
+		local header = storeUI:FindFirstChild("Header", true)
 		if header then
-			local closeBtn = header:FindFirstChild("CloseButton")
+			local closeBtn = header:FindFirstChild("CloseButton", true)
 			if closeBtn then
 				closeBtn.MouseButton1Click:Connect(function()
 					self:HideStore()
