@@ -202,6 +202,13 @@ function HUDController:UpdateStats(health: number, shield: number, dna: number)
 	end
 end
 
+-- Update DNA only
+function HUDController:UpdateDNA(dna: number)
+	if statsLabels["DNA"] then
+		statsLabels["DNA"].Text = "DNA: " .. tostring(dna)
+	end
+end
+
 -- Update player count
 function HUDController:UpdatePlayerCount(alive: number, total: number)
 	if statsLabels["PlayerCount"] then

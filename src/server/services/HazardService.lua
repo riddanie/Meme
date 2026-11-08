@@ -84,11 +84,15 @@ function HazardService:TriggerRagdoll(player: Player)
 		-- Position ragdoll at player death location
 		local hrp = character:FindFirstChild("HumanoidRootPart")
 		if hrp then
-			ragdoll:SetPrimaryPartCFrame(hrp.CFrame)
-			
-			-- Apply death physics impulse
+			-- Fix 4: Ensure ragdoll PrimaryPart is set, then position
 			local ragdollHRP = ragdoll:FindFirstChild("HumanoidRootPart")
 			if ragdollHRP then
+				if not ragdoll.PrimaryPart then
+					ragdoll.PrimaryPart = ragdollHRP
+				end
+				ragdoll:SetPrimaryPartCFrame(hrp.CFrame)
+				
+				-- Apply death physics impulse
 				ragdollHRP.AssemblyLinearVelocity = Vector3.new(
 					math.random(-20, 20), 
 					50, 
@@ -475,27 +479,6 @@ function HazardService:GetActiveHazards()
 end
 
 -- Damage check (for player collision)
-function HazardService:CheckHazardDamage(player: Player, damage: number, hazardType: string): boolean
-	local character = player.Character
-	if not character then return false end
-	
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	if not humanoid then return false end
-	
-	-- Apply damage
-	humanoid:TakeDamage(damage)
-	
-	print("[HazardService] Player took", damage, "damage from", hazardType, ":", player.Name)
-	
-	-- Check if player died
-	if humanoid.Health <= 0 then
-		self:TriggerRagdoll(player)
-		return true
-	end
-	
-	return false
-end
-
 print("[HazardService] Module loaded")
 
 -- Broadcast player death to clients
@@ -686,13 +669,12 @@ function HazardService:StartRespawnLoop()
 			local currentTime = tick()
 			for userId, deathTime in pairs(self._playerDeathTimes) do
 				if currentTime - deathTime >= self._respawnTime then
-					local player = game.Players:GetUserIdFromCharacter(userId)
-					if not player then
-						for _, p in ipairs(game.Players:GetPlayers()) do
-							if p.UserId == userId then
-								player = p
-								break
-							end
+					-- Fix 3: Lookup player by UserId (GetUserIdFromCharacter doesn't exist)
+					local player = nil
+					for _, p in ipairs(game.Players:GetPlayers()) do
+						if p.UserId == userId then
+							player = p
+							break
 						end
 					end
 					
