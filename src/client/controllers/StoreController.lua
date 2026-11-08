@@ -149,26 +149,24 @@ function StoreController:PurchaseSelected()
 		return
 	end
 
+	local shared = game.ReplicatedStorage:FindFirstChild("src"):WaitForChild("shared")
+	local RemoteEvents = require(shared:WaitForChild("RemoteEvents"))
 	local cosmetic = CosmeticDatabase.GetCosmetic(selectedCosmetic)
 	if not cosmetic then
 		print("[StoreController] Invalid cosmetic ID")
 		return
 	end
 
-	-- Check balance (client-side validation, server will double-check)
-	if playerDNA < cosmetic.cost then
-		print("[StoreController] Insufficient DNA. Need:", cosmetic.cost, "Have:", playerDNA)
-		-- TODO: Show error UI
+	if playerDNA < (cosmetic.cost or cosmetic.price or 0) then
+		print("[StoreController] Insufficient DNA")
 		return
 	end
 
-	print("[StoreController] Purchasing:", selectedCosmetic, "for", cosmetic.cost, "DNA")
-
-	-- Send to server
-	if RemoteEvents.EquipCosmetic then
-		RemoteEvents.EquipCosmetic:FireServer({
-			cosmeticId = selectedCosmetic,
-			action = "purchase",
+	print("[StoreController] Purchasing:", selectedCosmetic)
+	
+	if RemoteEvents.ShopPurchase then
+		RemoteEvents.ShopPurchase:FireServer({
+			cosmeticId = selectedCosmetic
 		})
 	end
 end
@@ -182,6 +180,17 @@ function StoreController:PreviewCosmetic()
 
 	print("[StoreController] Previewing:", selectedCosmetic)
 	-- TODO: Show preview modal
+end
+
+-- Claim daily reward
+function StoreController:ClaimDailyReward()
+	local shared = game.ReplicatedStorage:FindFirstChild("src"):WaitForChild("shared")
+	local RemoteEvents = require(shared:WaitForChild("RemoteEvents"))
+	
+	if RemoteEvents.DailyRewardsClaim then
+		RemoteEvents.DailyRewardsClaim:FireServer()
+		print("[StoreController] Requesting daily reward claim")
+	end
 end
 
 -- Show/hide store
@@ -231,6 +240,45 @@ end
 -- Knit lifecycle
 function StoreController:KnitInit()
 	self:CreateUI()
+	self:BindRemoteEvents()
+end
+
+function StoreController:BindRemoteEvents()
+	local shared = game.ReplicatedStorage:FindFirstChild("src"):WaitForChild("shared")
+	local RemoteEvents = require(shared:WaitForChild("RemoteEvents"))
+	
+	-- Listen for daily reward sync
+	if RemoteEvents.DailyRewardsSync then
+		RemoteEvents.DailyRewardsSync.OnClientEvent:Connect(function(result)
+			if result.success then
+				print("[StoreController] Daily reward claimed! Streak:", result.streak, "DNA:", result.rewardDNA)
+				balanceLabel.Text = result.newBalance .. " DNA"
+			else
+				print("[StoreController] Daily reward unavailable:", result.reason)
+			end
+		end)
+	end
+	
+	-- Listen for purchase result
+	if RemoteEvents.ShopPurchaseResult then
+		RemoteEvents.ShopPurchaseResult.OnClientEvent:Connect(function(result)
+			if result.success then
+				print("[StoreController] Purchase successful:", result.cosmeticId)
+				balanceLabel.Text = result.newBalance .. " DNA"
+			else
+				print("[StoreController] Purchase failed:", result.reason)
+			end
+		end)
+	end
+	
+	-- Listen for balance updates
+	if RemoteEvents.UpdateBalance then
+		RemoteEvents.UpdateBalance.OnClientEvent:Connect(function(data)
+			if balanceLabel then
+				balanceLabel.Text = data.balance .. " DNA"
+			end
+		end)
+	end
 end
 
 function StoreController:KnitStart()
