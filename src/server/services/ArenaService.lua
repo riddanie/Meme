@@ -14,6 +14,15 @@ ArenaService._timerConnection = nil
 ArenaService._hazardConnection = nil
 ArenaService._mutationConnection = nil
 
+-- Find shared modules
+local function getSharedFolder()
+	local src = ReplicatedStorage:FindFirstChild("src")
+	if src then
+		return src:FindFirstChild("shared")
+	end
+	return ReplicatedStorage:FindFirstChild("shared")
+end
+
 -- Get RemoteEvents
 local RemoteEvents = nil
 local function GetRemoteEvents()
@@ -28,15 +37,6 @@ local function GetRemoteEvents()
 		end
 	end
 	return RemoteEvents
-end
-
--- Find shared modules
-local function getSharedFolder()
-	local src = ReplicatedStorage:FindFirstChild("src")
-	if src then
-		return src:FindFirstChild("shared")
-	end
-	return nil
 end
 
 local GameConfig = nil
