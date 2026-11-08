@@ -26,40 +26,25 @@ function StoreController:CreateUI()
 	screenGui.DisplayOrder = 50
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	screenGui.Enabled = false -- Hidden by default
+	screenGui.Enabled = false
 
 	-- Main container
 	local container = screenGui:WaitForChild("Container")
-
-	-- Header
+	
+	-- Header with close button
 	local header = container:WaitForChild("Header")
-	local title = header:WaitForChild("Title")
 	local closeButton = header:WaitForChild("CloseButton")
 	closeButton.MouseButton1Click:Connect(function()
 		self:HideStore()
 	end)
 
 	-- Balance display
-	local balanceFrame = container:WaitForChild("BalanceFrame")
-	balanceLabel = balanceFrame:WaitForChild("BalanceLabel")
+	local balanceFrame = header:WaitForChild("Balance")
+	balanceLabel = balanceFrame:WaitForChild("Label")
 
 	-- Products list (scrolling frame)
 	local scrollingFrame = container:WaitForChild("ProductsList")
-
-	-- Populate products using template
 	self:PopulateProducts(scrollingFrame)
-
-	-- Action buttons
-	local buttonFrame = container:WaitForChild("ButtonFrame")
-	local purchaseButton = buttonFrame:WaitForChild("PurchaseButton")
-	purchaseButton.MouseButton1Click:Connect(function()
-		self:PurchaseSelected()
-	end)
-
-	local previewButton = buttonFrame:WaitForChild("PreviewButton")
-	previewButton.MouseButton1Click:Connect(function()
-		self:PreviewCosmetic()
-	end)
 
 	storeFrame = screenGui
 end
@@ -116,24 +101,6 @@ function StoreController:PopulateProducts(container: ScrollingFrame)
 	
 	if template then
 		template.Visible = false -- Hide template
-	end
-end
-		priceLabel.Name = "Price"
-		priceLabel.Size = UDim2.new(0.35, 0, 0, 40)
-		priceLabel.Position = UDim2.new(0.65, 0, 0, 10)
-		priceLabel.BackgroundTransparency = 1
-		priceLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-		priceLabel.TextSize = 18
-		priceLabel.Font = Enum.Font.GothamBold
-		priceLabel.Text = cosmetic.cost .. " DNA"
-		priceLabel.Parent = itemFrame
-
-		-- Click to select
-		itemFrame.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-				self:SelectCosmetic(cosmetic.id)
-			end
-		end)
 	end
 end
 

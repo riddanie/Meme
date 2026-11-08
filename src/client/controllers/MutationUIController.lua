@@ -27,14 +27,18 @@ function MutationUIController:CreateUI()
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-	-- Current mutation display
-	local currentMutationFrame = screenGui:WaitForChild("CurrentMutation")
-	local mutationName = currentMutationFrame:WaitForChild("MutationName")
-	local mutationRarity = currentMutationFrame:WaitForChild("MutationRarity")
-	local mutationTimerLabel = currentMutationFrame:WaitForChild("MutationTimerLabel")
+	-- Main container
+	local container = screenGui:WaitForChild("Container")
+	
+	-- Spin button
+	local spinButton = container:WaitForChild("SpinButton")
+	spinButton.MouseButton1Click:Connect(function()
+		self:RequestSpin()
+	end)
 
-	-- Mutations list (bottom center)
-	local mutationsFrame = screenGui:WaitForChild("MutationsFrame")
+	-- Pity counter section
+	local pitySection = container:WaitForChild("PitySection")
+	pityCounter = pitySection:WaitForChild("Counter")
 
 	mutationFrame = screenGui
 end

@@ -24,36 +24,28 @@ function DeathController:CreateUI()
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.IgnoreGuiInset = true
-	screenGui.Enabled = false -- Hidden by default
+	screenGui.Enabled = false
 
 	-- Fullscreen overlay
 	local overlay = screenGui:WaitForChild("Overlay")
 
-	-- Death panel
-	local deathPanel = overlay:WaitForChild("DeathPanel")
-	local deathTitle = deathPanel:WaitForChild("DeathTitle")
-	local killerLabel = deathPanel:WaitForChild("KillerLabel")
-	rewardLabels["Killer"] = killerLabel
+	-- DNA earned display
+	local dnaEarned = overlay:WaitForChild("DNAEarned")
+	rewardLabels["DNA"] = dnaEarned
 
-	-- Rewards section
-	local rewardsFrame = deathPanel:WaitForChild("RewardsFrame")
-	local dnaLabel = rewardsFrame:WaitForChild("DNALabel")
-	rewardLabels["DNA"] = dnaLabel
-
-	local placementLabel = rewardsFrame:WaitForChild("PlacementLabel")
+	-- Placement display
+	local placementLabel = overlay:WaitForChild("PlacementLabel")
 	rewardLabels["Placement"] = placementLabel
 
-	local timeLabel = rewardsFrame:WaitForChild("TimeLabel")
-	rewardLabels["Time"] = timeLabel
-
 	-- Action buttons
-	local retryButton = deathPanel:WaitForChild("RetryButton")
-	retryButton.MouseButton1Click:Connect(function()
+	local actions = overlay:WaitForChild("Actions")
+	local playAgainButton = actions:WaitForChild("PlayAgainButton")
+	playAgainButton.MouseButton1Click:Connect(function()
 		self:RetryMatch()
 	end)
 
-	local lobbyButton = deathPanel:WaitForChild("LobbyButton")
-	lobbyButton.MouseButton1Click:Connect(function()
+	local menuButton = actions:WaitForChild("MenuButton")
+	menuButton.MouseButton1Click:Connect(function()
 		self:ReturnToLobby()
 	end)
 

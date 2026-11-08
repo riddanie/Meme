@@ -531,9 +531,9 @@ local function BroadcastPlayerDeath(player: Player, killerId: number?, mutationU
 	if src then
 		local shared = src:FindFirstChild("shared")
 		if shared then
-			local re = shared:FindFirstChild("RemoteEvents")
-			if re then
-				re = require(re)
+			local reModule = shared:FindFirstChild("RemoteEvents")
+			if reModule then
+				local re = require(reModule)
 				if re.PlayerDeath then
 					re.PlayerDeath:FireAllClients({
 						playerId = player.UserId,
@@ -683,18 +683,15 @@ function HazardService:OnPlayerDeath(player: Player)
 					total = #game.Players:GetPlayers()
 				})
 			end
-			
+	
 			if re.PlayerDeath then
-				re = require(re)
-				if re.PlayerDeath then
-					re.PlayerDeath:FireAllClients({
-						playerId = player.UserId,
-						mutationUsed = "None",
-						timeSurvived = tick() - self._playerSpawnTimes[player.UserId],
-						placement = self:CalculatePlacement(player.UserId),
-						rewards = { dna = dnaReward, placement = 1 }
-					})
-				end
+				re.PlayerDeath:FireAllClients({
+					playerId = player.UserId,
+					mutationUsed = "None",
+					timeSurvived = tick() - self._playerSpawnTimes[player.UserId],
+					placement = self:CalculatePlacement(player.UserId),
+					rewards = { dna = dnaReward, placement = 1 }
+				})
 			end
 		end
 	end

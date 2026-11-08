@@ -44,13 +44,11 @@ function HUDController:CreateUI()
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	-- Arena timer (top center)
-	local timerLabel = screenGui:WaitForChild("ArenaTimer")
-	statsLabels["ArenaTimer"] = timerLabel
+	timerLabel = screenGui:WaitForChild("TimerLabel")
 
 	-- Store button (top right)
 	local storeButton = screenGui:WaitForChild("StoreButton")
 	storeButton.MouseButton1Click:Connect(function()
-		-- Open store (StoreController will handle)
 		local StoreController = require(script.Parent.StoreController)
 		if StoreController and StoreController.ShowStore then
 			StoreController:ShowStore()
@@ -61,54 +59,22 @@ function HUDController:CreateUI()
 	local statsFrame = screenGui:WaitForChild("StatsFrame")
 
 	-- Health stat
-	local healthLabel = statsFrame:WaitForChild("HealthLabel")
-	statsLabels["Health"] = healthLabel
+	dnaLabel = statsFrame:WaitForChild("DNAStat"):WaitForChild("Label")
+	playersLabel = statsFrame:WaitForChild("PlayersStat"):WaitForChild("Label")
 
-	-- Shield stat
-	local shieldLabel = statsFrame:WaitForChild("ShieldLabel")
-	statsLabels["Shield"] = shieldLabel
-
-	-- DNA collected
-	local dnaLabel = statsFrame:WaitForChild("DNALabel")
-	statsLabels["DNA"] = dnaLabel
-
-	-- Player count panel
-	local playerCountFrame = screenGui:WaitForChild("PlayerCountFrame")
-	playerCountLabel = playerCountFrame:WaitForChild("PlayerCount")
-	statsLabels["PlayerCount"] = playerCountLabel
+	-- Health section
+	local healthSection = screenGui:WaitForChild("HealthSection")
+	local healthBar = healthSection:WaitForChild("HealthBar")
+	healthFill = healthBar:WaitForChild("HealthFill")
 
 	-- Active mutations list (bottom)
-	local mutationsFrame = screenGui:WaitForChild("MutationsFrame")
-	mutationsFrame.BackgroundTransparency = 0.2
-	mutationsFrame.BorderSizePixel = 0
-	mutationsFrame.Parent = screenGui
+	mutationsFrame = screenGui:WaitForChild("MutationsFrame")
 
-	local mutationsTitle = Instance.new("TextLabel")
-	mutationsTitle.Name = "Title"
-	mutationsTitle.Size = UDim2.new(1, 0, 0, 30)
-	mutationsTitle.BackgroundTransparency = 1
-	mutationsTitle.TextColor3 = Color3.fromRGB(11, 198, 227)
-	mutationsTitle.TextSize = 14
-	mutationsTitle.Font = Enum.Font.GothamBold
-	mutationsTitle.Text = "Active Mutations"
-	mutationsTitle.Parent = mutationsFrame
-
-	for i = 1, 3 do
-		local mutationItem = Instance.new("TextLabel")
-		mutationItem.Name = "MutationItem" .. i
-		mutationItem.Size = UDim2.new(1, -16, 0, 25)
-		mutationItem.Position = UDim2.new(0, 8, 0, 30 + (i - 1) * 28)
-		mutationItem.BackgroundTransparency = 1
-		mutationItem.TextColor3 = Color3.fromRGB(255, 255, 255)
-		mutationItem.TextSize = 12
-		mutationItem.Font = Enum.Font.Gotham
-		mutationItem.Text = "• Mutation " .. i
-		mutationItem.TextXAlignment = Enum.TextXAlignment.Left
-		mutationItem.Parent = mutationsFrame
-		statsLabels["Mutation" .. i] = mutationItem
-	end
-
-	hudFrame = screenGui
+	statsLabels["DNA"] = dnaLabel
+	statsLabels["Players"] = playersLabel
+end
+	
+	hud = screenGui
 end
 
 -- Update arena timer
