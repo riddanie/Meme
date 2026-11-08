@@ -22,6 +22,7 @@ if not Knit then
 end
 
 local RemoteEvents = require(ReplicatedStorage:WaitForChild("src"):WaitForChild("shared"):WaitForChild("RemoteEvents"))
+local CosmeticDatabase = require(ReplicatedStorage:WaitForChild("src"):WaitForChild("shared"):WaitForChild("data"):WaitForChild("CosmeticDatabase"))
 
 local StoreController = Knit.CreateController {
 	Name = "StoreController",
@@ -97,6 +98,61 @@ function StoreController:BindEvents()
 	end
 end
 
+function StoreController:PopulateItems()
+	if not itemsFrame then
+		warn("[StoreController] ItemsFrame not found")
+		return
+	end
+	
+	-- Clear existing items
+	for _, child in ipairs(itemsFrame:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+	
+	local allCosmetics = CosmeticDatabase.GetAllCosmetics()
+	
+	for _, cosmetic in ipairs(allCosmetics) do
+		local itemCard = Instance.new("Frame")
+		itemCard.Name = cosmetic.id
+		itemCard.Size = UDim2.new(0, 150, 0, 180)
+		itemCard.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		itemCard.Parent = itemsFrame
+		
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Name = "NameLabel"
+		nameLabel.Size = UDim2.new(1, 0, 0, 30)
+		nameLabel.Position = UDim2.new(0, 0, 0, 0)
+		nameLabel.Text = cosmetic.name
+		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Parent = itemCard
+		
+		local costLabel = Instance.new("TextLabel")
+		costLabel.Name = "CostLabel"
+		costLabel.Size = UDim2.new(1, 0, 0, 25)
+		costLabel.Position = UDim2.new(0, 0, 0, 110)
+		costLabel.Text = tostring(cosmetic.cost) .. " DNA"
+		costLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		costLabel.BackgroundTransparency = 1
+		costLabel.Parent = itemCard
+		
+		local buyButton = Instance.new("TextButton")
+		buyButton.Name = "BuyButton"
+		buyButton.Size = UDim2.new(0.8, 0, 0, 30)
+		buyButton.Position = UDim2.new(0.1, 0, 0, 140)
+		buyButton.Text = "BUY"
+		buyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		buyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+		buyButton.Parent = itemCard
+		
+		buyButton.MouseButton1Click:Connect(function()
+			self:PurchaseCosmetic(cosmetic.id)
+		end)
+	end
+end
+
 function StoreController:ShowStore()
 	if storeUI then
 		storeUI.Enabled = true
@@ -127,6 +183,7 @@ end
 
 function StoreController:KnitInit()
 	self:CreateUI()
+	self:PopulateItems()
 end
 
 function StoreController:KnitStart()
