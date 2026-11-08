@@ -46,8 +46,7 @@ function HazardService:CheckHazardDamage(player: Player, damage: number, hazardT
 		-- Ragdoll trigger
 		self:TriggerRagdoll(player)
 		
-		-- Broadcast death & DNA payout
-		self:BroadcastPlayerDeath(player)
+		-- Broadcast death & DNA payout (handled by OnPlayerDeath)
 	end
 end
 
@@ -324,12 +323,12 @@ function HazardService:SpawnGravityVortex()
 						Debris:AddItem(bv, 0.1)
 					end
 					
-					-- Damage based on zone
+					-- Damage based on zone (scaled by dt)
 					local damage = 0
 					if dist < vortex.coreRadius then
-						damage = vortex.coreDamage
+						damage = vortex.coreDamage * dt
 					else
-						damage = vortex.outerDamage
+						damage = vortex.outerDamage * dt
 					end
 				
 					-- Rate-limited damage via CheckHazardDamage
@@ -718,7 +717,7 @@ function HazardService:StartRespawnLoop()
 	end)
 end
 
-return HazardService
-
 -- Initialize death listeners
 HazardService:Init()
+
+return HazardService
