@@ -697,6 +697,22 @@ function HazardService:OnPlayerDeath(player: Player)
 	end
 end
 
+function HazardService:CalculatePlacement(userId: number): number
+	-- Placeholder logic for placement calculation
+	local rankedPlayers = {}
+	for _, player in ipairs(game.Players:GetPlayers()) do
+		-- Sort by DNA or other metrics here
+		table.insert(rankedPlayers, player.UserId)
+	end
+	
+	for i, id in ipairs(rankedPlayers) do
+		if id == userId then
+			return i
+		end
+	end
+	return 1
+end
+
 -- Grant spawn protection (forcefield)
 function HazardService:GrantSpawnProtection(player: Player, duration: number)
 	local character = player.Character
