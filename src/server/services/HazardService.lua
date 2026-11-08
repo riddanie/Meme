@@ -119,6 +119,19 @@ end
 function HazardService:SpawnTsunami()
 	print("[HazardService] Tsunami Boba spawned")
 	
+	-- Tsunami Visual
+	local tsunamiPart = Instance.new("Part")
+	tsunamiPart.Name = "TsunamiPart"
+	tsunamiPart.Shape = Enum.PartType.Cylinder
+	tsunamiPart.Size = Vector3.new(10, 40, 40)
+	tsunamiPart.Material = Enum.Material.SmoothPlastic
+	tsunamiPart.Color = Color3.fromRGB(11, 198, 227)
+	tsunamiPart.Transparency = 0.5
+	tsunamiPart.Anchored = true
+	tsunamiPart.CanCollide = false
+	tsunamiPart.Position = Vector3.new(0, 20, 0)
+	tsunamiPart.Parent = workspace
+	
 	local tsunami = {
 		id = "tsunami_" .. tick(),
 		type = "tsunami",
@@ -128,6 +141,7 @@ function HazardService:SpawnTsunami()
 		knockback = 50,
 		duration = 8,
 		active = true,
+		visual = tsunamiPart,
 	}
 	
 	self._activeHazards[tsunami.id] = tsunami
@@ -157,6 +171,9 @@ function HazardService:SpawnTsunami()
 	task.delay(tsunami.duration, function()
 		tsunami.active = false
 		connection:Disconnect()
+		if tsunami.visual then
+			tsunami.visual:Destroy()
+		end
 		self._activeHazards[tsunami.id] = nil
 		print("[HazardService] Tsunami ended")
 	end)
@@ -186,10 +203,11 @@ function HazardService:SpawnAnvilRain()
 			spawnCount = spawnCount + 1
 			
 			local anvilPart = Instance.new("Part")
-			anvilPart.Name = "Hazard_Anvil"
+			anvilPart.Name = "AnvilPart"
 			anvilPart.Size = Vector3.new(2, 2, 2)
-			anvilPart.Material = Enum.Material.Metal
-			anvilPart.Color = Color3.fromRGB(80, 80, 80)
+			anvilPart.Material = Enum.Material.SmoothPlastic
+			anvilPart.Color = Color3.fromRGB(102, 102, 102)
+			anvilPart.Transparency = 0
 			anvilPart.CollisionGroup = "Hazards"
 			
 			-- Random position above arena
@@ -225,6 +243,18 @@ end
 function HazardService:SpawnLavaRising()
 	print("[HazardService] Lava Rising spawned")
 	
+	-- Lava visual (pool part that rises)
+	local lavaPool = Instance.new("Part")
+	lavaPool.Name = "LavaPool"
+	lavaPool.Size = Vector3.new(200, 1, 200)
+	lavaPool.Material = Enum.Material.Neon
+	lavaPool.Color = Color3.fromRGB(255, 69, 0)
+	lavaPool.Transparency = 0.2
+	lavaPool.Anchored = true
+	lavaPool.CanCollide = false
+	lavaPool.Position = Vector3.new(0, 0, 0)
+	lavaPool.Parent = workspace
+	
 	local lava = {
 		id = "lava_" .. tick(),
 		type = "lava",
@@ -233,6 +263,7 @@ function HazardService:SpawnLavaRising()
 		damage = 5, -- DoT per second in lava
 		duration = 15,
 		active = true,
+		visual = lavaPool,
 	}
 	
 	self._activeHazards[lava.id] = lava
@@ -241,6 +272,11 @@ function HazardService:SpawnLavaRising()
 	local riseConnection = RunService.Heartbeat:Connect(function(dt)
 		if lava.active then
 			lava.baseHeight = lava.baseHeight + (lava.riseSpeed * dt)
+			
+			-- Update visual position
+			if lavaPool then
+				lavaPool.Position = Vector3.new(0, lava.baseHeight, 0)
+			end
 			
 			-- Check for players below lava height
 			for _, player in ipairs(game.Players:GetPlayers()) do
@@ -259,6 +295,9 @@ function HazardService:SpawnLavaRising()
 	task.delay(lava.duration, function()
 		lava.active = false
 		riseConnection:Disconnect()
+		if lava.visual then
+			lava.visual:Destroy()
+		end
 		self._activeHazards[lava.id] = nil
 		print("[HazardService] Lava Rising ended")
 	end)
@@ -287,12 +326,12 @@ function HazardService:SpawnGravityVortex()
 	
 	-- Create vortex visual (placeholder sphere)
 	local vortexPart = Instance.new("Part")
-	vortexPart.Name = "Hazard_Vortex"
+	vortexPart.Name = "VortexSphere"
 	vortexPart.Shape = Enum.PartType.Ball
 	vortexPart.Size = Vector3.new(vortex.coreRadius * 2, vortex.coreRadius * 2, vortex.coreRadius * 2)
 	vortexPart.Material = Enum.Material.Neon
-	vortexPart.Color = Color3.fromRGB(138, 43, 226) -- Purple
-	vortexPart.Transparency = 0.5
+	vortexPart.Color = Color3.fromRGB(46, 8, 84)
+	vortexPart.Transparency = 0.7
 	vortexPart.CanCollide = false
 	vortexPart.Anchored = true
 	vortexPart.Position = vortex.position
@@ -377,7 +416,7 @@ function HazardService:SpawnElectricGrid()
 	for row = 1, grid.gridDimension do
 		for col = 1, grid.gridDimension do
 			local tile = Instance.new("Part")
-			tile.Name = "Hazard_GridTile"
+			tile.Name = "ElectricTile"
 			tile.Size = Vector3.new(grid.tileSize, 0.5, grid.tileSize)
 			tile.Position = Vector3.new(
 				startX + (col - 1) * grid.tileSize,
@@ -385,7 +424,8 @@ function HazardService:SpawnElectricGrid()
 				startZ + (row - 1) * grid.tileSize
 			)
 			tile.Material = Enum.Material.Neon
-			tile.Color = Color3.fromRGB(10, 10, 10) -- Dark (off state)
+			tile.Color = Color3.fromRGB(255, 255, 0)
+			tile.Transparency = 0.4
 			tile.Anchored = true
 			tile.CanCollide = false
 			tile.CollisionGroup = "Hazards"
@@ -402,11 +442,11 @@ function HazardService:SpawnElectricGrid()
 			waveCount = waveCount + 1
 			print("[HazardService] Electric Grid wave", waveCount)
 			
-			-- Activate random tiles
+			-- Activate random tiles (make fully opaque)
 			local activeTiles = {}
 			for i = 1, math.random(8, 12) do
 				local tile = tiles[math.random(1, #tiles)]
-				tile.Color = Color3.fromRGB(11, 198, 227) -- Cyan (#0BC6E3)
+				tile.Transparency = 0 -- Flash to full brightness
 				table.insert(activeTiles, tile)
 			end
 			
@@ -436,7 +476,7 @@ function HazardService:SpawnElectricGrid()
 			-- Deactivate tiles
 			task.delay(1, function()
 				for _, tile in ipairs(activeTiles) do
-					tile.Color = Color3.fromRGB(10, 10, 10)
+					tile.Transparency = 0.4 -- Return to dim state
 				end
 			end)
 			
