@@ -73,9 +73,6 @@ function HUDController:CreateUI()
 	statsLabels["DNA"] = dnaLabel
 	statsLabels["Players"] = playersLabel
 end
-	
-	hud = screenGui
-end
 
 -- Update arena timer
 function HUDController:UpdateArenaTimer(timeRemaining: number)
