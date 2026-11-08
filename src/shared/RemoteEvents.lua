@@ -4,7 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local EVENT_NAMES = {"MutationApplied", "ArenaTimerTick", "PlayerDeath", "MutationBroadcast", "PlayerEliminated", "CosmeticEquipped", "UpdateBalance", "RequestBalance", "UpdateHUD", "SpinMutation", "EquipCosmetic", "RequestRespawn", "RequestSpectate"}
+local EVENT_NAMES = {"MutationApplied", "ArenaTimerTick", "PlayerDeath", "MutationBroadcast", "PlayerEliminated", "CosmeticEquipped", "UpdateBalance", "RequestBalance", "UpdateHUD", "SpinMutation", "EquipCosmetic", "RequestRespawn", "RequestSpectate", "ShopPurchase", "ShopPurchaseResult", "ClaimDailyReward"}
 
 local RemoteEvents = {}
 
