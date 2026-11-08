@@ -32,46 +32,57 @@ local HUDController = Knit.CreateController {
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-local hudFrame: ScreenGui? = nil
 local statsLabels: { [string]: TextLabel } = {}
-local playerCountLabel: TextLabel? = nil
+local timerLabel: TextLabel? = nil
+local dnaLabel: TextLabel? = nil
+local playersLabel: TextLabel? = nil
+local healthFill: Frame? = nil
 
 -- HUD layout already exists in StarterGui
 function HUDController:CreateUI()
-	local screenGui = playerGui:WaitForChild("ArenaHUD")
+	local screenGui = playerGui:WaitForChild("ArenaHUD", 10)
+	if not screenGui then
+		warn("HUDController: ArenaHUD not found")
+		return
+	end
+	
 	screenGui.DisplayOrder = 1
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	-- Arena timer (top center)
-	timerLabel = screenGui:WaitForChild("TimerLabel")
+	timerLabel = screenGui:WaitForChild("TimerLabel", 10)
+	if timerLabel then
+		statsLabels["ArenaTimer"] = timerLabel
+	end
 
-	-- Store button (top right)
-	local storeButton = screenGui:WaitForChild("StoreButton")
-	storeButton.MouseButton1Click:Connect(function()
-		local StoreController = require(script.Parent.StoreController)
-		if StoreController and StoreController.ShowStore then
-			StoreController:ShowStore()
+	-- DNA and Players stats
+	local dnaStat = screenGui:FindFirstChild("DNAStat")
+	if dnaStat then
+		dnaLabel = dnaStat:FindFirstChild("Label")
+		if dnaLabel then
+			statsLabels["DNA"] = dnaLabel
 		end
-	end)
+	end
 
-	-- Player stats panel (left side)
-	local statsFrame = screenGui:WaitForChild("StatsFrame")
-
-	-- Health stat
-	dnaLabel = statsFrame:WaitForChild("DNAStat"):WaitForChild("Label")
-	playersLabel = statsFrame:WaitForChild("PlayersStat"):WaitForChild("Label")
+	local playersStat = screenGui:FindFirstChild("PlayersStat")
+	if playersStat then
+		playersLabel = playersStat:FindFirstChild("Label")
+		if playersLabel then
+			statsLabels["Players"] = playersLabel
+		end
+	end
 
 	-- Health section
-	local healthSection = screenGui:WaitForChild("HealthSection")
-	local healthBar = healthSection:WaitForChild("HealthBar")
-	healthFill = healthBar:WaitForChild("HealthFill")
+	local healthSection = screenGui:FindFirstChild("HealthSection")
+	if healthSection then
+		local healthBar = healthSection:FindFirstChild("HealthBar")
+		if healthBar then
+			healthFill = healthBar:FindFirstChild("HealthFill")
+		end
+	end
 
-	-- Active mutations list (bottom)
-	mutationsFrame = screenGui:WaitForChild("MutationsFrame")
-
-	statsLabels["DNA"] = dnaLabel
-	statsLabels["Players"] = playersLabel
+	print("HUDController Loaded")
 end
 
 -- Update arena timer
@@ -90,19 +101,6 @@ function HUDController:UpdateArenaTimer(timeRemaining: number)
 	end
 end
 
--- Update player stats
-function HUDController:UpdateStats(health: number, shield: number, dna: number)
-	if statsLabels["Health"] then
-		statsLabels["Health"].Text = "Health: " .. math.floor(health) .. "%"
-	end
-	if statsLabels["Shield"] then
-		statsLabels["Shield"].Text = "Shield: " .. math.floor(shield) .. "%"
-	end
-	if statsLabels["DNA"] then
-		statsLabels["DNA"].Text = "DNA: " .. tostring(dna)
-	end
-end
-
 -- Update DNA only
 function HUDController:UpdateDNA(dna: number)
 	if statsLabels["DNA"] then
@@ -112,23 +110,16 @@ end
 
 -- Update player count
 function HUDController:UpdatePlayerCount(alive: number, total: number)
-	if statsLabels["PlayerCount"] then
-		statsLabels["PlayerCount"].Text = alive .. " / " .. total
+	if statsLabels["Players"] then
+		statsLabels["Players"].Text = "#Players: " .. tostring(alive) .. "/" .. tostring(total)
 	end
 end
 
--- Show active mutations
-function HUDController:ShowActiveMutations(mutations: { any })
-	for i = 1, 3 do
-		local label = statsLabels["Mutation" .. i]
-		if label then
-			if mutations[i] then
-				local durationText = mutations[i].duration == -1 and "PERM" or (mutations[i].duration .. "s")
-				label.Text = "• " .. mutations[i].id .. " (" .. durationText .. ")"
-			else
-				label.Text = ""
-			end
-		end
+-- Update health bar
+function HUDController:UpdateHealth(health: number, maxHealth: number)
+	if healthFill then
+		local healthPercent = math.clamp(health / maxHealth, 0, 1)
+		healthFill.Size = UDim2.new(healthPercent, 0, 1, 0)
 	end
 end
 
@@ -145,12 +136,12 @@ function HUDController:KnitStart()
 		if player.Character then
 			local humanoid = player.Character:FindFirstChild("Humanoid")
 			if humanoid then
+				-- Initial update
+				self:UpdateHealth(humanoid.Health, humanoid.MaxHealth)
+				
+				-- Listen for changes
 				humanoid.HealthChanged:Connect(function(health)
-					local maxHealth = humanoid.MaxHealth
-					local healthPercent = math.floor((health / maxHealth) * 100)
-					if statsLabels["Health"] then
-						statsLabels["Health"].Text = "Health: " .. healthPercent .. "%"
-					end
+					self:UpdateHealth(health, humanoid.MaxHealth)
 				end)
 			end
 		end
@@ -173,23 +164,15 @@ function HUDController:KnitStart()
 			self:UpdatePlayerCount(payload.alive or 0, payload.total or 0)
 		end)
 	end
-
-	if RemoteEvents.MutationBroadcast then
-		RemoteEvents.MutationBroadcast.OnClientEvent:Connect(function(payload: any)
-			-- Update active mutations list
-			-- TODO: maintain local mutation list and update it
-		end)
-	end
 	
-	-- Directive 2: Listen for UpdateHUD events
+	-- Listen for UpdateHUD events
 	if RemoteEvents.UpdateHUD then
 		RemoteEvents.UpdateHUD.OnClientEvent:Connect(function(payload: any)
 			if payload.dna then
 				self:UpdateDNA(payload.dna)
 			end
-			if payload.playerCount then
-				local maxPlayers = 16
-				self:UpdatePlayerCount(payload.playerCount, maxPlayers)
+			if payload.alive and payload.total then
+				self:UpdatePlayerCount(payload.alive, payload.total)
 			end
 		end)
 	end
