@@ -36,7 +36,14 @@ function StoreService:Init()
 		end)
 	end
 	
-	-- Sync balance to client periodically or on request
+	-- Handle RequestBalance
+	if RemoteEvents.RequestBalance then
+		RemoteEvents.RequestBalance.OnServerEvent:Connect(function(player)
+			self:SyncBalance(player)
+		end)
+	end
+
+	-- Sync balance to client periodically or request
 	Players.PlayerAdded:Connect(function(player)
 		task.wait(2)
 		self:SyncBalance(player)
