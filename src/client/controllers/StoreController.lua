@@ -24,6 +24,7 @@ local playerDNA: number = 0
 function StoreController:CreateUI()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "StoreUI"
+	screenGui.DisplayOrder = 50
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Enabled = false -- Hidden by default
@@ -32,12 +33,17 @@ function StoreController:CreateUI()
 	-- Main container
 	local container = Instance.new("Frame")
 	container.Name = "Container"
-	container.Size = UDim2.new(0, 382, 0, 700)
-	container.Position = UDim2.new(0.5, -191, 0, 100)
+	container.AnchorPoint = Vector2.new(0.5, 0.5)
+	container.Size = UDim2.new(0, 382, 0.92, 0)
+	container.Position = UDim2.new(0.5, 0, 0.5, 0)
 	container.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
 	container.BackgroundTransparency = 0.2
 	container.BorderSizePixel = 0
 	container.Parent = screenGui
+
+	local sizeConstraint = Instance.new("UISizeConstraint")
+	sizeConstraint.MaxSize = Vector2.new(382, 640)
+	sizeConstraint.Parent = container
 
 	-- Header
 	local header = Instance.new("Frame")
@@ -50,13 +56,27 @@ function StoreController:CreateUI()
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 1, 0)
+	title.Size = UDim2.new(1, -40, 1, 0)
 	title.BackgroundTransparency = 1
 	title.TextColor3 = Color3.fromRGB(255, 56, 100)
 	title.TextSize = 24
 	title.Font = Enum.Font.GothamBold
 	title.Text = "STORE"
 	title.Parent = header
+
+	local closeButton = Instance.new("TextButton")
+	closeButton.Name = "CloseButton"
+	closeButton.Size = UDim2.new(0, 32, 0, 32)
+	closeButton.Position = UDim2.new(1, -40, 0, 6)
+	closeButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
+	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeButton.TextSize = 20
+	closeButton.Font = Enum.Font.GothamBold
+	closeButton.Text = "X"
+	closeButton.Parent = header
+	closeButton.MouseButton1Click:Connect(function()
+		self:HideStore()
+	end)
 
 	-- Balance display
 	local balanceFrame = Instance.new("Frame")
@@ -82,11 +102,16 @@ function StoreController:CreateUI()
 	-- Products list (scrolling frame)
 	local scrollingFrame = Instance.new("ScrollingFrame")
 	scrollingFrame.Name = "ProductsList"
-	scrollingFrame.Size = UDim2.new(1, -32, 0, 400)
-	scrollingFrame.Position = UDim2.new(0, 16, 0, 160)
+	scrollingFrame.Size = UDim2.new(1, -32, 1, -176)
+	scrollingFrame.Position = UDim2.new(0, 16, 0, 108)
 	scrollingFrame.BackgroundTransparency = 1
 	scrollingFrame.ScrollBarThickness = 4
+	scrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	scrollingFrame.Parent = container
+
+	local uiPadding = Instance.new("UIPadding")
+	uiPadding.PaddingRight = UDim.new(0, 8)
+	uiPadding.Parent = scrollingFrame
 
 	local uiListLayout = Instance.new("UIListLayout")
 	uiListLayout.Padding = UDim.new(0, 8)
@@ -194,7 +219,30 @@ end
 function StoreController:SelectCosmetic(cosmeticId: string)
 	selectedCosmetic = cosmeticId
 	print("[StoreController] Selected:", cosmeticId)
-	-- TODO: Highlight selected item visually
+	
+	-- Remove stroke from all items
+	if storeFrame then
+		local productsList = storeFrame:FindFirstChild("Container"):FindFirstChild("ProductsList")
+		if productsList then
+			for _, item in ipairs(productsList:GetChildren()) do
+				if item:IsA("Frame") then
+					local existingStroke = item:FindFirstChild("UIStroke")
+					if existingStroke then
+						existingStroke:Destroy()
+					end
+				end
+			end
+			
+			-- Add stroke to selected item
+			local selectedItem = productsList:FindFirstChild(cosmeticId)
+			if selectedItem then
+				local stroke = Instance.new("UIStroke")
+				stroke.Color = Color3.fromRGB(0, 212, 170)
+				stroke.Thickness = 2
+				stroke.Parent = selectedItem
+			end
+		end
+	end
 end
 
 -- Update balance display

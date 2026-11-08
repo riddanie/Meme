@@ -40,6 +40,7 @@ local playerCountLabel: TextLabel? = nil
 function HUDController:CreateUI()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "ArenaHUD"
+	screenGui.DisplayOrder = 1
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
@@ -82,7 +83,7 @@ function HUDController:CreateUI()
 	-- Player stats panel (left side)
 	local statsFrame = Instance.new("Frame")
 	statsFrame.Name = "StatsFrame"
-	statsFrame.Size = UDim2.new(0, 200, 0, 200)
+	statsFrame.Size = UDim2.new(0, 150, 0, 120)
 	statsFrame.Position = UDim2.new(0, 16, 0, 120)
 	statsFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
 	statsFrame.BackgroundTransparency = 0.2
@@ -92,11 +93,11 @@ function HUDController:CreateUI()
 	-- Health stat
 	local healthLabel = Instance.new("TextLabel")
 	healthLabel.Name = "HealthLabel"
-	healthLabel.Size = UDim2.new(1, 0, 0, 40)
-	healthLabel.Position = UDim2.new(0, 0, 0, 8)
+	healthLabel.Size = UDim2.new(1, -20, 0, 36)
+	healthLabel.Position = UDim2.new(0, 10, 0, 6)
 	healthLabel.BackgroundTransparency = 1
 	healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	healthLabel.TextSize = 16
+	healthLabel.TextSize = 14
 	healthLabel.Font = Enum.Font.Gotham
 	healthLabel.Text = "Health: 100%"
 	healthLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -106,11 +107,11 @@ function HUDController:CreateUI()
 	-- Shield stat
 	local shieldLabel = Instance.new("TextLabel")
 	shieldLabel.Name = "ShieldLabel"
-	shieldLabel.Size = UDim2.new(1, 0, 0, 40)
-	shieldLabel.Position = UDim2.new(0, 0, 0, 48)
+	shieldLabel.Size = UDim2.new(1, -20, 0, 36)
+	shieldLabel.Position = UDim2.new(0, 10, 0, 42)
 	shieldLabel.BackgroundTransparency = 1
 	shieldLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	shieldLabel.TextSize = 16
+	shieldLabel.TextSize = 14
 	shieldLabel.Font = Enum.Font.Gotham
 	shieldLabel.Text = "Shield: 25%"
 	shieldLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -120,22 +121,22 @@ function HUDController:CreateUI()
 	-- DNA collected
 	local dnaLabel = Instance.new("TextLabel")
 	dnaLabel.Name = "DNALabel"
-	dnaLabel.Size = UDim2.new(1, 0, 0, 40)
-	dnaLabel.Position = UDim2.new(0, 0, 0, 88)
+	dnaLabel.Size = UDim2.new(1, -20, 0, 36)
+	dnaLabel.Position = UDim2.new(0, 10, 0, 78)
 	dnaLabel.BackgroundTransparency = 1
 	dnaLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-	dnaLabel.TextSize = 16
+	dnaLabel.TextSize = 14
 	dnaLabel.Font = Enum.Font.GothamBold
 	dnaLabel.Text = "DNA: 0"
 	dnaLabel.TextXAlignment = Enum.TextXAlignment.Left
 	dnaLabel.Parent = statsFrame
 	statsLabels["DNA"] = dnaLabel
 
-	-- Player count panel (right side)
+	-- Player count panel
 	local playerCountFrame = Instance.new("Frame")
 	playerCountFrame.Name = "PlayerCountFrame"
-	playerCountFrame.Size = UDim2.new(0, 200, 0, 120)
-	playerCountFrame.Position = UDim2.new(1, -216, 0, 120)
+	playerCountFrame.Size = UDim2.new(0, 150, 0, 84)
+	playerCountFrame.Position = UDim2.new(1, -166, 0, 120)
 	playerCountFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
 	playerCountFrame.BackgroundTransparency = 0.2
 	playerCountFrame.BorderSizePixel = 0
@@ -143,23 +144,26 @@ function HUDController:CreateUI()
 
 	local playerCountTitle = Instance.new("TextLabel")
 	playerCountTitle.Name = "Title"
-	playerCountTitle.Size = UDim2.new(1, 0, 0, 30)
+	playerCountTitle.Size = UDim2.new(1, -20, 0, 24)
+	playerCountTitle.Position = UDim2.new(0, 10, 0, 6)
 	playerCountTitle.BackgroundTransparency = 1
 	playerCountTitle.TextColor3 = Color3.fromRGB(11, 198, 227)
 	playerCountTitle.TextSize = 14
 	playerCountTitle.Font = Enum.Font.GothamBold
 	playerCountTitle.Text = "Players Alive"
+	playerCountTitle.TextXAlignment = Enum.TextXAlignment.Left
 	playerCountTitle.Parent = playerCountFrame
 
 	playerCountLabel = Instance.new("TextLabel")
 	playerCountLabel.Name = "PlayerCount"
-	playerCountLabel.Size = UDim2.new(1, 0, 0, 60)
-	playerCountLabel.Position = UDim2.new(0, 0, 0, 40)
+	playerCountLabel.Size = UDim2.new(1, -20, 0, 42)
+	playerCountLabel.Position = UDim2.new(0, 10, 0, 36)
 	playerCountLabel.BackgroundTransparency = 1
 	playerCountLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-	playerCountLabel.TextSize = 32
+	playerCountLabel.TextSize = 22
 	playerCountLabel.Font = Enum.Font.GothamBold
-	playerCountLabel.Text = "0 / 16"
+	playerCountLabel.Text = "16 / 16"
+	playerCountLabel.TextXAlignment = Enum.TextXAlignment.Left
 	playerCountLabel.Parent = playerCountFrame
 	statsLabels["PlayerCount"] = playerCountLabel
 
@@ -208,6 +212,13 @@ function HUDController:UpdateArenaTimer(timeRemaining: number)
 	local minutes = math.floor(timeRemaining / 60)
 	local seconds = timeRemaining % 60
 	statsLabels["ArenaTimer"].Text = string.format("%02d:%02d", minutes, seconds)
+
+	-- Flash red if low time (≤ 5 seconds)
+	if timeRemaining <= 5 then
+		statsLabels["ArenaTimer"].TextColor3 = Color3.fromRGB(255, 56, 100) -- Red
+	else
+		statsLabels["ArenaTimer"].TextColor3 = Color3.fromRGB(11, 198, 227) -- Cyan
+	end
 end
 
 -- Update player stats

@@ -21,8 +21,10 @@ local rewardLabels: { [string]: TextLabel } = {}
 function DeathController:CreateUI()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "DeathScreen"
+	screenGui.DisplayOrder = 100
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.IgnoreGuiInset = true
 	screenGui.Enabled = false -- Hidden by default
 	screenGui.Parent = playerGui
 
@@ -38,8 +40,9 @@ function DeathController:CreateUI()
 	-- Death message
 	local deathFrame = Instance.new("Frame")
 	deathFrame.Name = "DeathPanel"
-	deathFrame.Size = UDim2.new(0, 382, 0, 600)
-	deathFrame.Position = UDim2.new(0.5, -191, 0.5, -300)
+	deathFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	deathFrame.Size = UDim2.new(0, 360, 0, 310)
+	deathFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	deathFrame.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
 	deathFrame.BackgroundTransparency = 0.2
 	deathFrame.BorderSizePixel = 0
@@ -47,19 +50,19 @@ function DeathController:CreateUI()
 
 	local deathTitle = Instance.new("TextLabel")
 	deathTitle.Name = "DeathTitle"
-	deathTitle.Size = UDim2.new(1, 0, 0, 80)
-	deathTitle.Position = UDim2.new(0, 0, 0, 16)
+	deathTitle.Size = UDim2.new(1, -32, 0, 40)
+	deathTitle.Position = UDim2.new(0, 16, 0, 10)
 	deathTitle.BackgroundTransparency = 1
 	deathTitle.TextColor3 = Color3.fromRGB(255, 56, 100)
-	deathTitle.TextSize = 36
+	deathTitle.TextSize = 28
 	deathTitle.Font = Enum.Font.GothamBold
 	deathTitle.Text = "RAGDOLLED"
 	deathTitle.Parent = deathFrame
 
 	local killerLabel = Instance.new("TextLabel")
 	killerLabel.Name = "KillerLabel"
-	killerLabel.Size = UDim2.new(1, 0, 0, 30)
-	killerLabel.Position = UDim2.new(0, 0, 0, 96)
+	killerLabel.Size = UDim2.new(1, -32, 0, 24)
+	killerLabel.Position = UDim2.new(0, 16, 0, 52)
 	killerLabel.BackgroundTransparency = 1
 	killerLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
 	killerLabel.TextSize = 14
@@ -71,30 +74,20 @@ function DeathController:CreateUI()
 	-- Rewards section
 	local rewardsFrame = Instance.new("Frame")
 	rewardsFrame.Name = "RewardsFrame"
-	rewardsFrame.Size = UDim2.new(1, -32, 0, 180)
-	rewardsFrame.Position = UDim2.new(0, 16, 0, 140)
+	rewardsFrame.Size = UDim2.new(1, -32, 0, 120)
+	rewardsFrame.Position = UDim2.new(0, 16, 0, 80)
 	rewardsFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
 	rewardsFrame.BackgroundTransparency = 0.3
 	rewardsFrame.BorderSizePixel = 0
 	rewardsFrame.Parent = deathFrame
 
-	local rewardsTitle = Instance.new("TextLabel")
-	rewardsTitle.Name = "Title"
-	rewardsTitle.Size = UDim2.new(1, 0, 0, 30)
-	rewardsTitle.BackgroundTransparency = 1
-	rewardsTitle.TextColor3 = Color3.fromRGB(11, 198, 227)
-	rewardsTitle.TextSize = 16
-	rewardsTitle.Font = Enum.Font.GothamBold
-	rewardsTitle.Text = "Rewards Earned"
-	rewardsTitle.Parent = rewardsFrame
-
 	local dnaLabel = Instance.new("TextLabel")
 	dnaLabel.Name = "DNALabel"
-	dnaLabel.Size = UDim2.new(1, -16, 0, 40)
-	dnaLabel.Position = UDim2.new(0, 8, 0, 40)
+	dnaLabel.Size = UDim2.new(1, -16, 0, 28)
+	dnaLabel.Position = UDim2.new(0, 8, 0, 8)
 	dnaLabel.BackgroundTransparency = 1
 	dnaLabel.TextColor3 = Color3.fromRGB(0, 212, 170)
-	dnaLabel.TextSize = 18
+	dnaLabel.TextSize = 16
 	dnaLabel.Font = Enum.Font.GothamBold
 	dnaLabel.Text = "DNA Collected: +250"
 	dnaLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -103,11 +96,11 @@ function DeathController:CreateUI()
 
 	local placementLabel = Instance.new("TextLabel")
 	placementLabel.Name = "PlacementLabel"
-	placementLabel.Size = UDim2.new(1, -16, 0, 40)
-	placementLabel.Position = UDim2.new(0, 8, 0, 80)
+	placementLabel.Size = UDim2.new(1, -16, 0, 28)
+	placementLabel.Position = UDim2.new(0, 8, 0, 40)
 	placementLabel.BackgroundTransparency = 1
 	placementLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-	placementLabel.TextSize = 18
+	placementLabel.TextSize = 16
 	placementLabel.Font = Enum.Font.GothamBold
 	placementLabel.Text = "Match Placement: #8 / 16"
 	placementLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -116,70 +109,22 @@ function DeathController:CreateUI()
 
 	local timeLabel = Instance.new("TextLabel")
 	timeLabel.Name = "TimeLabel"
-	timeLabel.Size = UDim2.new(1, -16, 0, 40)
-	timeLabel.Position = UDim2.new(0, 8, 0, 120)
+	timeLabel.Size = UDim2.new(1, -16, 0, 28)
+	timeLabel.Position = UDim2.new(0, 8, 0, 72)
 	timeLabel.BackgroundTransparency = 1
 	timeLabel.TextColor3 = Color3.fromRGB(11, 198, 227)
-	timeLabel.TextSize = 18
+	timeLabel.TextSize = 16
 	timeLabel.Font = Enum.Font.GothamBold
 	timeLabel.Text = "Time Survived: 01:22"
 	timeLabel.TextXAlignment = Enum.TextXAlignment.Left
 	timeLabel.Parent = rewardsFrame
 	rewardLabels["Time"] = timeLabel
 
-	-- Replay controls
-	local replayFrame = Instance.new("Frame")
-	replayFrame.Name = "ReplayFrame"
-	replayFrame.Size = UDim2.new(1, -32, 0, 100)
-	replayFrame.Position = UDim2.new(0, 16, 0, 340)
-	replayFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-	replayFrame.BackgroundTransparency = 0.3
-	replayFrame.BorderSizePixel = 0
-	replayFrame.Parent = deathFrame
-
-	local replayTitle = Instance.new("TextLabel")
-	replayTitle.Name = "Title"
-	replayTitle.Size = UDim2.new(1, 0, 0, 30)
-	replayTitle.BackgroundTransparency = 1
-	replayTitle.TextColor3 = Color3.fromRGB(11, 198, 227)
-	replayTitle.TextSize = 16
-	replayTitle.Font = Enum.Font.GothamBold
-	replayTitle.Text = "Replay Controls"
-	replayTitle.Parent = replayFrame
-
-	local replayButton = Instance.new("TextButton")
-	replayButton.Name = "ReplayButton"
-	replayButton.Size = UDim2.new(0.48, 0, 0, 44)
-	replayButton.Position = UDim2.new(0, 8, 0, 40)
-	replayButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
-	replayButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	replayButton.TextSize = 14
-	replayButton.Font = Enum.Font.GothamBold
-	replayButton.Text = "REPLAY DEATH"
-	replayButton.Parent = replayFrame
-	replayButton.MouseButton1Click:Connect(function()
-		self:PlayReplay()
-	end)
-
-	local shareButton = Instance.new("TextButton")
-	shareButton.Name = "ShareButton"
-	shareButton.Size = UDim2.new(0.48, 0, 0, 44)
-	shareButton.Position = UDim2.new(0.52, 0, 0, 40)
-	shareButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
-	shareButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	shareButton.TextSize = 14
-	shareButton.Font = Enum.Font.GothamBold
-	shareButton.Text = "SHARE CLIP"
-	shareButton.Parent = replayFrame
-	shareButton.MouseButton1Click:Connect(function()
-		self:ShareClip()
-	end)
-
 	-- Action buttons
 	local retryButton = Instance.new("TextButton")
 	retryButton.Name = "RetryButton"
-	retryButton.Size = UDim2.new(1, -32, 0, 50)
-	retryButton.Position = UDim2.new(0, 16, 0, 460)
+	retryButton.Size = UDim2.new(1, -32, 0, 44)
+	retryButton.Position = UDim2.new(0, 16, 0, 208)
 	retryButton.BackgroundColor3 = Color3.fromRGB(0, 212, 170)
 	retryButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	retryButton.TextSize = 16
@@ -192,8 +137,8 @@ function DeathController:CreateUI()
 
 	local lobbyButton = Instance.new("TextButton")
 	lobbyButton.Name = "LobbyButton"
-	lobbyButton.Size = UDim2.new(1, -32, 0, 50)
-	lobbyButton.Position = UDim2.new(0, 16, 0, 525)
+	lobbyButton.Size = UDim2.new(1, -32, 0, 44)
+	lobbyButton.Position = UDim2.new(0, 16, 0, 258)
 	lobbyButton.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
 	lobbyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	lobbyButton.TextSize = 16
