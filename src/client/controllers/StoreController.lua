@@ -37,9 +37,14 @@ local itemsFrame: Frame? = nil
 local openButton: TextButton? = nil
 
 function StoreController:CreateUI()
-	local screenGui = playerGui:FindFirstChild("ArenaHUD")
-	if not screenGui then
-		warn("[StoreController] ArenaHUD not found")
+	-- Wait for ArenaHUD with timeout
+	local screenGui
+	local success = pcall(function()
+		screenGui = playerGui:WaitForChild("ArenaHUD", 10)
+	end)
+	
+	if not success or not screenGui then
+		warn("[StoreController] ArenaHUD not found within timeout")
 		return
 	end
 
@@ -51,9 +56,12 @@ function StoreController:CreateUI()
 		end)
 	end
 
-	-- Store UI (from StarterGui)
-	storeUI = playerGui:FindFirstChild("StoreUI", true)
-	if storeUI then
+	-- Store UI (from StarterGui) - wait for replication
+	local success2 = pcall(function()
+		storeUI = playerGui:WaitForChild("StoreUI", 10)
+	end)
+	
+	if success2 and storeUI then
 		storeUI.Enabled = false
 		container = storeUI:FindFirstChild("Container", true)
 		balanceLabel = storeUI:FindFirstChild("BalanceLabel", true)
@@ -69,6 +77,8 @@ function StoreController:CreateUI()
 				end)
 			end
 		end
+	else
+		warn("[StoreController] StoreUI not found within timeout")
 	end
 end
 
@@ -116,34 +126,37 @@ function StoreController:PopulateItems()
 	for _, cosmetic in ipairs(allCosmetics) do
 		local itemCard = Instance.new("Frame")
 		itemCard.Name = cosmetic.id
-		itemCard.Size = UDim2.new(0, 150, 0, 180)
+		itemCard.Size = UDim2.new(0, 120, 0, 120)
 		itemCard.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 		itemCard.Parent = itemsFrame
 		
 		local nameLabel = Instance.new("TextLabel")
 		nameLabel.Name = "NameLabel"
-		nameLabel.Size = UDim2.new(1, 0, 0, 30)
+		nameLabel.Size = UDim2.new(1, 0, 0, 25)
 		nameLabel.Position = UDim2.new(0, 0, 0, 0)
 		nameLabel.Text = cosmetic.name
 		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		nameLabel.TextSize = 12
 		nameLabel.BackgroundTransparency = 1
 		nameLabel.Parent = itemCard
 		
 		local costLabel = Instance.new("TextLabel")
 		costLabel.Name = "CostLabel"
-		costLabel.Size = UDim2.new(1, 0, 0, 25)
-		costLabel.Position = UDim2.new(0, 0, 0, 110)
+		costLabel.Size = UDim2.new(1, 0, 0, 20)
+		costLabel.Position = UDim2.new(0, 0, 0, 65)
 		costLabel.Text = tostring(cosmetic.cost) .. " DNA"
 		costLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		costLabel.TextSize = 10
 		costLabel.BackgroundTransparency = 1
 		costLabel.Parent = itemCard
 		
 		local buyButton = Instance.new("TextButton")
 		buyButton.Name = "BuyButton"
-		buyButton.Size = UDim2.new(0.8, 0, 0, 30)
-		buyButton.Position = UDim2.new(0.1, 0, 0, 140)
+		buyButton.Size = UDim2.new(0.8, 0, 0, 25)
+		buyButton.Position = UDim2.new(0.1, 0, 0, 90)
 		buyButton.Text = "BUY"
 		buyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		buyButton.TextSize = 10
 		buyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 		buyButton.Parent = itemCard
 		

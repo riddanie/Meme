@@ -26,31 +26,40 @@ local streakLabel: TextLabel? = nil
 local claimButton: TextButton? = nil
 
 function DailyRewardsController:CreateUI()
-	dailyUI = playerGui:FindFirstChild("DailyRewardsUI", true)
-	if dailyUI then
-		dailyUI.Enabled = false
-		streakLabel = dailyUI:FindFirstChild("StreakLabel", true)
-		claimButton = dailyUI:FindFirstChild("ClaimButton", true)
-		
-		if claimButton then
-			claimButton.MouseButton1Click:Connect(function()
-				self:ClaimReward()
+	-- Wait for DailyRewardsUI with timeout
+	local success = pcall(function()
+		dailyUI = playerGui:WaitForChild("DailyRewardsUI", 10)
+	end)
+	
+	if not success or not dailyUI then
+		warn("[DailyRewardsController] DailyRewardsUI not found within timeout")
+		return
+	end
+	
+	dailyUI.Enabled = false
+	streakLabel = dailyUI:FindFirstChild("StreakLabel", true)
+	claimButton = dailyUI:FindFirstChild("ClaimButton", true)
+	
+	if claimButton then
+		claimButton.MouseButton1Click:Connect(function()
+			self:ClaimReward()
+		end)
+	end
+	
+	-- Bind close button
+	local header = dailyUI:FindFirstChild("Header", true)
+	if header then
+		local closeBtn = header:FindFirstChild("CloseButton", true)
+		if closeBtn then
+			closeBtn.MouseButton1Click:Connect(function()
+				self:HideUI()
 			end)
 		end
-		
-		-- Bind close button
-		local header = dailyUI:FindFirstChild("Header", true)
-		if header then
-			local closeBtn = header:FindFirstChild("CloseButton", true)
-			if closeBtn then
-				closeBtn.MouseButton1Click:Connect(function()
-					self:HideUI()
-				end)
-			end
-		end
-		
-		-- Bind open button from ArenaHUD
-		local screenGui = playerGui:FindFirstChild("ArenaHUD", true)
+	end
+	
+	-- Bind open button from ArenaHUD - wait with timeout
+	local success2 = pcall(function()
+		local screenGui = playerGui:WaitForChild("ArenaHUD", 10)
 		if screenGui then
 			local openBtn = screenGui:FindFirstChild("DailyButton", true)
 			if openBtn then
@@ -59,9 +68,7 @@ function DailyRewardsController:CreateUI()
 				end)
 			end
 		end
-	else
-		warn("[DailyRewardsController] DailyRewardsUI not found")
-	end
+	end)
 end
 
 function DailyRewardsController:BindEvents()
